@@ -13,7 +13,7 @@
 - AutoMapper
 - JwtBearer
 - TypeScript
-- Angular 17
+- Angular
 
 ## 📸 
 
