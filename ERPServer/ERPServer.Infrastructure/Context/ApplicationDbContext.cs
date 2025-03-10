@@ -1,4 +1,5 @@
 ﻿using ERPServer.Domain.Entities;
+using ERPServer.Domain.Enums;
 using GenericRepository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -14,6 +15,7 @@ namespace ERPServer.Infrastructure.Context
 
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Depot> Depots { get; set; }
+        public DbSet<Product> Products { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
