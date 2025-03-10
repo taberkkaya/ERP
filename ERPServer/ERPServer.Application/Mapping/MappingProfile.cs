@@ -6,6 +6,8 @@ using ERPServer.Application.Features.Depots.UpdateDepot;
 using ERPServer.Application.Features.Products.CreateProduct;
 using ERPServer.Application.Features.Products.UpdateProduct;
 using ERPServer.Domain.Entities;
+using ERPServer.Domain.Enums;
+using Microsoft.Extensions.Options;
 
 namespace ERPServer.Application.Mapping
 {
@@ -19,8 +21,13 @@ namespace ERPServer.Application.Mapping
             CreateMap<CreateDepotCommand,Depot>();
             CreateMap<UpdateDepotCommand,Depot>();
 
-            CreateMap<CreateProductCommand,Product>();
-            CreateMap<UpdateProductCommand,Product>();
+            CreateMap<CreateProductCommand,Product>().ForMember(member => member.ProductType, options => {
+                options.MapFrom(map => ProductTypeEnum.FromValue(map.ProductTypeValue));
+            });
+
+            CreateMap<UpdateProductCommand,Product>().ForMember(member => member.ProductType, options => {
+                options.MapFrom(map => ProductTypeEnum.FromValue(map.ProductTypeValue));
+            });
         }
     }
 }

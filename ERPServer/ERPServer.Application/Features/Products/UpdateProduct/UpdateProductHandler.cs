@@ -19,7 +19,7 @@ internal sealed class UpdateProductHandler(
         if (product is null)
             return Result<string>.Failure("Ürün bulunamadı!");
 
-        bool isNameExist = await productRepository.AnyAsync(p => p.Name.ToLower() == request.Name.ToLower(), cancellationToken);
+        bool isNameExist = await productRepository.AnyAsync(p => p.Name.ToLower() == request.Name.ToLower() && p.Name != request.Name, cancellationToken);
         if (isNameExist)
             return Result<string>.Failure("Bu isimde bir ürün zaten mevcut!");
 

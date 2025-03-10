@@ -5,5 +5,5 @@ namespace ERPServer.Application.Features.Products.CreateProduct;
 
 public sealed record CreateProductCommand(
     string Name,
-    int ProductType
+    int ProductTypeValue
     ) : IRequest<Result<string>>;

@@ -6,5 +6,5 @@ namespace ERPServer.Domain.Entities;
 public sealed class Product : Entity
 {
     public string Name { get; set; } = string.Empty;
-    public ProductTypeEnum ProductType{ get; set; } = ProductTypeEnum.Mamul;
+    public ProductTypeEnum ProductType{ get; set; } = ProductTypeEnum.Product;
 }
