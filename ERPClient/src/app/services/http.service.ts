@@ -24,7 +24,7 @@ export class HttpService {
     this.http
       .post<ResultModel<T>>(`${api}/${apiUrl}`, body, {
         headers: {
-          Authorization: 'Bearer' + this.auth.token,
+          Authorization: 'Bearer ' + this.auth.token,
         },
       })
       .subscribe({
