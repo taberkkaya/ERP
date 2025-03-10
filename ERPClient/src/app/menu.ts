@@ -29,8 +29,15 @@ export const Menus: MenuModel[] = [
       },
       {
         name: 'Depolar',
-        icon: 'far fa-solid fa-users',
+        icon: 'far fa-solid fa-warehouse',
         url: '/depots',
+        isTitle: false,
+        subMenus: [],
+      },
+      {
+        name: 'Ürünler',
+        icon: 'far fa-solid fa-boxes-stacked',
+        url: '/products',
         isTitle: false,
         subMenus: [],
       },
