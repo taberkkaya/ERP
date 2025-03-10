@@ -27,6 +27,13 @@ export const Menus: MenuModel[] = [
         isTitle: false,
         subMenus: [],
       },
+      {
+        name: 'Depolar',
+        icon: 'far fa-solid fa-users',
+        url: '/depots',
+        isTitle: false,
+        subMenus: [],
+      },
     ],
   },
 ];

@@ -5,6 +5,7 @@ import { HttpService } from '../../services/http.service';
 import { CustomerPipe } from '../../pipes/customer.pipe';
 import { NgForm } from '@angular/forms';
 import { SwalService } from '../../services/swal.service';
+import { NgFor } from '@angular/common';
 
 @Component({
   selector: 'app-customers',
@@ -18,6 +19,10 @@ export class CustomersComponent implements OnInit {
   search: string = '';
 
   @ViewChild('createModalCloseBtn') createModalCloseBtn:
+    | ElementRef<HTMLButtonElement>
+    | undefined;
+
+  @ViewChild('updateModalCloseBtn') updateModalCloseBtn:
     | ElementRef<HTMLButtonElement>
     | undefined;
 
@@ -42,6 +47,36 @@ export class CustomersComponent implements OnInit {
         this.swal.callToast(res);
         this.createModel = new CustomerModel();
         this.createModalCloseBtn?.nativeElement.click();
+        this.getAll();
+      });
+  }
+
+  deleteById(model: CustomerModel) {
+    this.swal.callSwal(
+      'Müşteri Sil?',
+      `${model.name} müşterisini silmek istiyor musunuz?`,
+      () => {
+        this.http.post<string>(
+          'Customers/DeleteById',
+          { id: model.id },
+          (res) => {
+            this.getAll();
+            this.swal.callToast(res, 'info');
+          }
+        );
+      }
+    );
+  }
+
+  get(model: CustomerModel) {
+    this.updateModel = { ...model };
+  }
+
+  update(form: NgForm) {
+    if (form.valid)
+      this.http.post<string>('Customers/Update', this.updateModel, (res) => {
+        this.swal.callToast(res, 'info');
+        this.updateModalCloseBtn?.nativeElement.click();
         this.getAll();
       });
   }
