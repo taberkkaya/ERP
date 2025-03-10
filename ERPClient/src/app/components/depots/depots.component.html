@@ -1,0 +1,235 @@
+<app-blank pageName="Depolar" [routes]="['Depolar']">
+  <app-section sectionTitle="Depo Listesi">
+    <div class="form-group row">
+      <div class="col-9">
+        <button
+          class="btn btn-dark"
+          data-toggle="modal"
+          data-target="#createModal"
+        >
+          <i class="fa-solid fa-plus me-2"></i>Depo Ekle
+        </button>
+      </div>
+      <div class="col-3">
+        <input
+          [(ngModel)]="search"
+          type="search"
+          class="form-control"
+          placeholder="Ara..."
+        />
+      </div>
+    </div>
+    <div class="form-group mt-2">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Depo Adı</th>
+            <th>Şehir</th>
+            <th>İlçe</th>
+            <th>Adres</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for(depot of depots | depot:search; track depot){
+          <tr>
+            <td>{{ $index + 1 }}</td>
+            <td>{{ depot.name }}</td>
+            <td>{{ depot.city }}</td>
+            <td>{{ depot.town }}</td>
+            <td>{{ depot.address }}</td>
+            <td>
+              <button
+                class="btn btn-outline-primary btn-sm me-2"
+                data-toggle="modal"
+                data-target="#updateModal"
+                (click)="get(depot)"
+              >
+                <i class="fa-solid fa-edit"></i>
+              </button>
+              <button
+                class="btn btn-outline-danger btn-sm"
+                (click)="deleteById(depot)"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </app-section>
+</app-blank>
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5">Depo Ekleme Formu</h1>
+        <button
+          type="button"
+          #createModalCloseBtn
+          class="btn btn-outline-danger"
+          data-dismiss="modal"
+        >
+          <i class="fa-solid fa-x"></i>
+        </button>
+      </div>
+      <form
+        formValidate
+        #createForm="ngForm"
+        (ngSubmit)="create(createForm)"
+        autocomplete="off"
+      >
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Depo Adı</label>
+            <input
+              [(ngModel)]="createModel.name"
+              type="text"
+              required
+              minlength="3"
+              class="form-control"
+              name="name"
+            />
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="row form-group">
+            <div class="col-6">
+              <div class="form-group">
+                <label>Şehir</label>
+                <input
+                  [(ngModel)]="createModel.city"
+                  type="text"
+                  required
+                  minlength="3"
+                  class="form-control"
+                  name="city"
+                />
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group">
+                <label>İlçe</label>
+                <input
+                  [(ngModel)]="createModel.town"
+                  type="text"
+                  required
+                  minlength="3"
+                  class="form-control"
+                  name="town"
+                />
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group mt-2">
+            <label>Adres</label>
+            <textarea
+              [(ngModel)]="createModel.address"
+              class="form-control"
+              required
+              minlength="3"
+              name="address"
+              rows="5"
+            ></textarea>
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-dark w-100">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Update Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5">Depo Güncelleme Formu</h1>
+        <button
+          type="button"
+          #updateModalCloseBtn
+          class="btn btn-outline-danger"
+          data-dismiss="modal"
+        >
+          <i class="fa-solid fa-x"></i>
+        </button>
+      </div>
+      <form
+        formValidate
+        #updateForm="ngForm"
+        (ngSubmit)="update(updateForm)"
+        autocomplete="off"
+      >
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Müşteri Adı</label>
+            <input
+              [(ngModel)]="updateModel.name"
+              type="text"
+              required
+              minlength="3"
+              class="form-control"
+              name="updateName"
+            />
+            <div class="invalid-feedback"></div>
+          </div>
+
+          <div class="row form-group">
+            <div class="col-6">
+              <div class="form-group">
+                <label>Şehir</label>
+                <input
+                  [(ngModel)]="updateModel.city"
+                  type="text"
+                  required
+                  minlength="3"
+                  class="form-control"
+                  name="updateCity"
+                />
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group">
+                <label>İlçe</label>
+                <input
+                  [(ngModel)]="updateModel.town"
+                  type="text"
+                  required
+                  minlength="3"
+                  class="form-control"
+                  name="updateTown"
+                />
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group mt-2">
+            <label>Adres</label>
+            <textarea
+              [(ngModel)]="updateModel.address"
+              class="form-control"
+              required
+              minlength="3"
+              name="updateAddress"
+              rows="5"
+            ></textarea>
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">Güncelle</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
