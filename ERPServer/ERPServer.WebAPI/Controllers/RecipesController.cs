@@ -31,7 +31,6 @@ namespace ERPServer.WebAPI.Controllers
         {
             var response = await _mediator.Send(request);
             return StatusCode(response.StatusCode, response);
-        }        
-        
+        }
     }
 }
