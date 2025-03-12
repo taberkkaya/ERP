@@ -43,25 +43,27 @@
             <td>{{ data.status.name }}</td>
             <td>
               <a
-                class="btn btn-outline-dark me-1"
+                class="btn btn-outline-success btn-sm me-1"
                 href="requirements-planning/{{ data.id }}"
                 target="_blank"
                 (click)="getAll()"
+                title="İhtiyaç Planlaması Çalıştır"
               >
-                <i class="fa-solid fa-list me-1"></i>
-                İhtiyaç Planlaması Çalıştır
+                <i class="fa-solid fa-circle-play"></i>
               </a>
               <button
-                class="btn btn-outline-primary btn-sm me-2"
+                class="btn btn-outline-primary btn-sm me-1"
                 data-toggle="modal"
                 data-target="#updateModal"
                 (click)="get(data)"
+                title="Düzenle"
               >
                 <i class="fa-solid fa-edit"></i>
               </button>
               <button
                 class="btn btn-outline-danger btn-sm"
                 (click)="deleteById(data)"
+                title="Sil"
               >
                 <i class="fa-solid fa-trash"></i>
               </button>
