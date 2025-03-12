@@ -1,5 +1,8 @@
-<app-blank pageName="Siparişler" [routes]="['Siparişler']">
-  <app-section sectionTitle="Sipariş Listesi">
+<app-blank
+  pageName="{{ typeName }} Faturaları"
+  [routes]="[typeName + ' Faturaları']"
+>
+  <app-section sectionTitle="{{ typeName }} Fatura Listesi">
     <div class="form-group row">
       <div class="col-9">
         <button
@@ -7,7 +10,7 @@
           data-toggle="modal"
           data-target="#createModal"
         >
-          <i class="fa-solid fa-plus me-2"></i>Sipariş Ekle
+          <i class="fa-solid fa-plus me-2"></i>{{ typeName }} Faturası Ekle
         </button>
       </div>
       <div class="col-3">
@@ -25,32 +28,19 @@
           <tr>
             <th>#</th>
             <th>Tarih</th>
-            <th>Sipariş Numarası</th>
+            <th>Fatura Numarası</th>
             <th>Müşteri</th>
-            <th>Teslim Tarihi</th>
-            <th>Durumu</th>
             <th>İşlemler</th>
           </tr>
         </thead>
         <tbody>
-          @for(data of orders | order:search; track data){
+          @for(data of invoices | invoice:search; track data){
           <tr>
             <td>{{ $index + 1 }}</td>
             <td>{{ data.date | date : "dd.MM.yyyy" }}</td>
-            <td>{{ data.number }}</td>
+            <td>{{ data.invoiceNumber }}</td>
             <td>{{ data.customer.name }}</td>
-            <td>{{ data.deliveryDate | date : "dd.MM.yyyy" }}</td>
-            <td>{{ data.status.name }}</td>
             <td>
-              <a
-                class="btn btn-outline-dark me-1"
-                href="requirements-planning/{{ data.id }}"
-                target="_blank"
-                (click)="getAll()"
-              >
-                <i class="fa-solid fa-list me-1"></i>
-                İhtiyaç Planlaması Çalıştır
-              </a>
               <button
                 class="btn btn-outline-primary btn-sm me-2"
                 data-toggle="modal"
@@ -79,7 +69,7 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5">Sipariş Ekleme Formu</h1>
+        <h1 class="modal-title fs-5">{{ typeName }} Faturası Ekleme Formu</h1>
         <button
           type="button"
           #createModalCloseBtn
@@ -107,6 +97,19 @@
             />
             <div class="invalid-feedback"></div>
           </div>
+          <div class="form-group">
+            <label>Fatura Numarası</label>
+            <input
+              [(ngModel)]="createModel.invoiceNumber"
+              type="text"
+              required
+              class="form-control"
+              name="invoiceNumber"
+              required
+              maxlength="16"
+            />
+            <div class="invalid-feedback"></div>
+          </div>
           <div class="form-group mt-2">
             <label>Müşteri</label>
             <select
@@ -119,17 +122,6 @@
               <option [value]="customer.id">{{ customer.name }}</option>
               }
             </select>
-            <div class="invalid-feedback"></div>
-          </div>
-          <div class="form-group mt-2">
-            <label>Teslim Tarihi</label>
-            <input
-              [(ngModel)]="createModel.deliveryDate"
-              type="date"
-              required
-              class="form-control"
-              name="deliveryDate"
-            />
             <div class="invalid-feedback"></div>
           </div>
           <hr />
@@ -151,6 +143,20 @@
               </div>
               <div class="col-3">
                 <div class="form-group">
+                  <label>Depo</label>
+                  <select
+                    class="form-control"
+                    [(ngModel)]="createDetail.depotId"
+                    [ngModelOptions]="{ standalone: true }"
+                  >
+                    @for(depot of depots; track depot){
+                    <option [value]="depot.id">{{ depot.name }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="col-2">
+                <div class="form-group">
                   <label>Adet</label>
                   <input
                     class="form-control"
@@ -159,7 +165,7 @@
                   />
                 </div>
               </div>
-              <div class="col-3">
+              <div class="col-2">
                 <div class="form-group">
                   <label>Birim Fiyatı</label>
                   <input
@@ -169,7 +175,7 @@
                   />
                 </div>
               </div>
-              <div class="col-3">
+              <div class="col-2">
                 <div class="form-group">
                   <label>Toplam</label><br />
                   <label>{{
@@ -195,6 +201,7 @@
                   <tr>
                     <th>#</th>
                     <th>Ürün Adı</th>
+                    <th>Depo Adı</th>
                     <th>Adedi</th>
                     <th>Birim Fiyatı</th>
                     <th>Toplam</th>
@@ -208,6 +215,7 @@
                       {{ $index + 1 }}
                     </td>
                     <td>{{ data.product.name }}</td>
+                    <td>{{ data.depot.name }}</td>
                     <td>{{ data.quantity }}</td>
                     <td>{{ data.price | trCurrency : "₺" : true }}</td>
                     <td>
@@ -242,7 +250,9 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5">Sipariş Güncelleme Formu</h1>
+        <h1 class="modal-title fs-5">
+          {{ typeName }} Faturası Güncelleme Formu
+        </h1>
         <button
           type="button"
           #updateModalCloseBtn
@@ -266,7 +276,20 @@
               type="date"
               required
               class="form-control"
-              name="updateName"
+              name="updateDate"
+            />
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="form-group">
+            <label>Fatura Numarası</label>
+            <input
+              [(ngModel)]="updateModel.invoiceNumber"
+              type="text"
+              required
+              class="form-control"
+              name="updateInvoiceNumber"
+              required
+              maxlength="16"
             />
             <div class="invalid-feedback"></div>
           </div>
@@ -284,17 +307,7 @@
             </select>
             <div class="invalid-feedback"></div>
           </div>
-          <div class="form-group mt-2">
-            <label>Teslim Tarihi</label>
-            <input
-              [(ngModel)]="updateModel.deliveryDate"
-              type="date"
-              required
-              class="form-control"
-              name="updateDeliveryDate"
-            />
-            <div class="invalid-feedback"></div>
-          </div>
+
           <hr />
           <div class="form-group mt-2">
             <div class="row">
@@ -314,6 +327,20 @@
               </div>
               <div class="col-3">
                 <div class="form-group">
+                  <label>Depo</label>
+                  <select
+                    class="form-control"
+                    [(ngModel)]="updateDetail.depotId"
+                    [ngModelOptions]="{ standalone: true }"
+                  >
+                    @for(depot of depots; track depot){
+                    <option [value]="depot.id">{{ depot.name }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="col-2">
+                <div class="form-group">
                   <label>Adet</label>
                   <input
                     class="form-control"
@@ -322,7 +349,7 @@
                   />
                 </div>
               </div>
-              <div class="col-3">
+              <div class="col-2">
                 <div class="form-group">
                   <label>Birim Fiyatı</label>
                   <input
@@ -332,7 +359,7 @@
                   />
                 </div>
               </div>
-              <div class="col-3">
+              <div class="col-2">
                 <div class="form-group">
                   <label>Toplam</label><br />
                   <label>{{
@@ -358,6 +385,7 @@
                   <tr>
                     <th>#</th>
                     <th>Ürün Adı</th>
+                    <th>Depo Adı</th>
                     <th>Adedi</th>
                     <th>Birim Fiyatı</th>
                     <th>Toplam</th>
@@ -371,6 +399,7 @@
                       {{ $index + 1 }}
                     </td>
                     <td>{{ data.product.name }}</td>
+                    <td>{{ data.depot.name }}</td>
                     <td>{{ data.quantity }}</td>
                     <td>{{ data.price | trCurrency : "₺" : true }}</td>
                     <td>

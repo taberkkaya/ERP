@@ -3,6 +3,7 @@ export class ProductModel {
   name: string = '';
   productType: ProductTypeModel = new ProductTypeModel();
   productTypeValue: number = 0;
+  quantity: number = 0;
 }
 
 export class ProductTypeModel {
