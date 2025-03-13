@@ -27,7 +27,7 @@ Use the following credentials to authenticate:
 
 Username: admin
 
-Password: admin
+Password: 1
 
 
 Copy the generated token.
