@@ -143,4 +143,10 @@ export class OrdersComponent {
         this.getAll();
       });
   }
+
+  setStatusClass(statusValue: number) {
+    if (statusValue === 1) return 'text-danger';
+    else if (statusValue === 2) return 'text-primary';
+    else return 'text-success';
+  }
 }

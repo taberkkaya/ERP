@@ -4,6 +4,7 @@ export class ProductModel {
   productType: ProductTypeModel = new ProductTypeModel();
   productTypeValue: number = 0;
   quantity: number = 0;
+  stock: number = 0;
 }
 
 export class ProductTypeModel {

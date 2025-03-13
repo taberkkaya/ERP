@@ -7,6 +7,7 @@ using ERPServer.Application.Features.Invoices.CreateInvoice;
 using ERPServer.Application.Features.Invoices.UpdateInvoice;
 using ERPServer.Application.Features.Orders.CreateOrder;
 using ERPServer.Application.Features.Orders.UpdateOrder;
+using ERPServer.Application.Features.Productions.CreateProduction;
 using ERPServer.Application.Features.Products.CreateProduct;
 using ERPServer.Application.Features.Products.UpdateProduct;
 using ERPServer.Application.Features.RecipeDetails.CreateRecipeDetail;
@@ -73,6 +74,8 @@ namespace ERPServer.Application.Mapping
                .ForMember(
                    member => member.Details,
                    options => options.Ignore());
+
+            CreateMap<CreateProductionCommand, Production>();
         }
     }
 }

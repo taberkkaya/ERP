@@ -40,13 +40,16 @@
             <td>{{ data.number }}</td>
             <td>{{ data.customer.name }}</td>
             <td>{{ data.deliveryDate | date : "dd.MM.yyyy" }}</td>
-            <td>{{ data.status.name }}</td>
+            <td [ngClass]="setStatusClass(data.status.value)">
+              {{ data.status.name }}
+            </td>
+            @if(data.status.value < 3){
             <td>
               <a
+                (click)="getAll()"
                 class="btn btn-outline-success btn-sm me-1"
                 href="requirements-planning/{{ data.id }}"
                 target="_blank"
-                (click)="getAll()"
                 title="İhtiyaç Planlaması Çalıştır"
               >
                 <i class="fa-solid fa-circle-play"></i>
@@ -68,6 +71,7 @@
                 <i class="fa-solid fa-trash"></i>
               </button>
             </td>
+            }
           </tr>
           }
         </tbody>

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ERPServer.Domain.Entities;
+using ERPServer.Domain.Enums;
 using ERPServer.Domain.Repository;
 using GenericRepository;
 using MediatR;

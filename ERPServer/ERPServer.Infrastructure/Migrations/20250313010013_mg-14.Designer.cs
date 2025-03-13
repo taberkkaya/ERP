@@ -4,6 +4,7 @@ using ERPServer.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ERPServer.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250313010013_mg-14")]
+    partial class mg14
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -295,9 +298,6 @@ namespace ERPServer.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("DepotId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
@@ -305,8 +305,6 @@ namespace ERPServer.Infrastructure.Migrations
                         .HasColumnType("decimal(7,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DepotId");
 
                     b.HasIndex("ProductId");
 
@@ -477,19 +475,11 @@ namespace ERPServer.Infrastructure.Migrations
 
             modelBuilder.Entity("ERPServer.Domain.Entities.Production", b =>
                 {
-                    b.HasOne("ERPServer.Domain.Entities.Depot", "Depot")
-                        .WithMany()
-                        .HasForeignKey("DepotId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("ERPServer.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Depot");
 
                     b.Navigation("Product");
                 });

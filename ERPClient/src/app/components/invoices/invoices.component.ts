@@ -11,6 +11,7 @@ import { DepotModel } from '../../models/depot.model';
 import { ActivatedRoute } from '@angular/router';
 import { SharedModule } from '../../modules/shared.module';
 import { InvoicePipe } from '../../pipes/invoice.pipe';
+import { OrderModel } from '../../models/order.model';
 
 @Component({
   selector: 'app-invoices',
@@ -30,6 +31,8 @@ export class InvoicesComponent {
   depots: DepotModel[] = [];
   type: number = 1;
   typeName: string = 'Alış';
+  orders: OrderModel[] = [];
+  customerOrders: OrderModel[] = [];
 
   @ViewChild('createModalCloseBtn') createModalCloseBtn:
     | ElementRef<HTMLButtonElement>
@@ -60,6 +63,7 @@ export class InvoicesComponent {
       this.getAllProducts();
       this.getAllCustomers();
       this.getAllDepots();
+      this.getAllOrders();
     });
   }
 
@@ -71,6 +75,12 @@ export class InvoicesComponent {
         this.invoices = res;
       }
     );
+  }
+
+  getAllOrders() {
+    this.http.post<OrderModel[]>('Orders/GetAll', {}, (res) => {
+      this.orders = res.filter((p) => p.status.value < 3);
+    });
   }
 
   getAllProducts() {
@@ -180,5 +190,11 @@ export class InvoicesComponent {
         this.updateModalCloseBtn?.nativeElement.click();
         this.getAll();
       });
+  }
+
+  setSelectedCustomerOrders() {
+    this.customerOrders = this.orders.filter(
+      (p) => p.customerId == this.createModel.customerId
+    );
   }
 }
