@@ -45,7 +45,7 @@ Key: token
 Value: (paste the obtained token here)
 
 
-* Now, the Angular frontend will use this token for authentication. *
+*Now, the Angular frontend will use this token for authentication.*
 
 ## 📸 
 ![1](https://github.com/user-attachments/assets/75be5446-4dd8-4b0c-a997-d3fe77700eda)
