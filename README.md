@@ -15,6 +15,38 @@
 - TypeScript
 - Angular
 
+##Authentication Instructions
+
+This ERP application does not include a login screen. To use the system, you need to obtain a token manually and store it in the browser. Follow these steps:
+
+#1. Get a Token:
+
+Open the Swagger UI.
+
+Use the following credentials to authenticate:
+
+Username: admin
+
+Password: admin
+
+
+Copy the generated token.
+
+
+
+#2. Store the Token in the Browser:
+
+Open the browser’s developer console (F12 → Application → Local Storage).
+
+Add a new key-value pair:
+
+Key: token
+
+Value: (paste the obtained token here)
+
+
+Now, the Angular frontend will use this token for authentication.
+
 ## 📸 
 ![1](https://github.com/user-attachments/assets/75be5446-4dd8-4b0c-a997-d3fe77700eda)
 ![2](https://github.com/user-attachments/assets/7aedf690-83f1-47bf-96eb-675137bbe71a)
