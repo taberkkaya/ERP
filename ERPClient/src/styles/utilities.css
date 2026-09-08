@@ -1,0 +1,65 @@
+/* ============================================================================
+   Tezgah — yardımcı sınıflar. Yalnızca şablonlarda tekrar eden birkaç ölçü ve
+   hizalama; genel amaçlı bir yardımcı sınıf kitaplığı değil.
+   ========================================================================= */
+
+.tz-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tz-row--between { justify-content: space-between; }
+.tz-row--end { justify-content: flex-end; }
+.tz-row--wrap { flex-wrap: wrap; }
+.tz-row--top { align-items: flex-start; }
+
+.tz-stack { display: grid; gap: 14px; }
+.tz-stack--sm { display: grid; gap: 8px; }
+
+.tz-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .tz-cols { grid-template-columns: minmax(0, 1fr); }
+}
+
+.tz-muted { color: var(--tz-muted); }
+.tz-ink2 { color: var(--tz-ink-2); }
+.tz-accent { color: var(--tz-accent); }
+.tz-ok { color: var(--tz-ok); }
+.tz-danger { color: var(--tz-danger); }
+.tz-warn { color: var(--tz-warn); }
+
+.tz-right { text-align: right; }
+.tz-center { text-align: center; }
+
+.tz-small { font-size: 12px; }
+.tz-strong { font-weight: 600; }
+
+.tz-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tz-grow { flex: 1 1 auto; min-width: 0; }
+
+.tz-mt { margin-top: 14px; }
+.tz-mb { margin-bottom: 14px; }
+
+/* Ekranda görünmez ama ekran okuyucuya okunur. */
+.tz-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}

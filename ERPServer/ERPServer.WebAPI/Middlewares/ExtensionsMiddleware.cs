@@ -1,30 +1,56 @@
-﻿using ERPServer.Domain.Entities;
+using ERPServer.Domain.Entities;
+using ERPServer.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 
-namespace ERPServer.WebAPI.Middlewares
+namespace ERPServer.WebAPI.Middlewares;
+
+public static class ExtensionsMiddleware
 {
-    public static class ExtensionsMiddleware
+    /// <summary>
+    /// Acilista veritabanini hazirlar: migration'lari uygular ve ilk yonetici
+    /// kullanicisini olusturur. Konteynerde elle migration calistiracak bir kabuk
+    /// olmadigi icin bu adim acilisin parcasi.
+    /// </summary>
+    public static async Task PrepareDatabaseAsync(this WebApplication app)
     {
-        public static void CreateFirstUser(WebApplication app)
+        bool migrateOnStartup = app.Configuration.GetValue("Database:MigrateOnStartup", true);
+
+        if (migrateOnStartup)
         {
-            using (var scoped = app.Services.CreateScope())
-            {
-                var userManager = scoped.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+            await DatabaseInitializer.MigrateMainDatabaseAsync(app.Services);
+        }
 
-                if (!userManager.Users.Any(p => p.UserName == "admin"))
-                {
-                    AppUser user = new()
-                    {
-                        UserName = "admin",
-                        Email = "admin@admin.com",
-                        FirstName = "Ataberk",
-                        LastName = "Kaya",
-                        EmailConfirmed = true
-                    };
+        await CreateFirstUserAsync(app);
+    }
 
-                    userManager.CreateAsync(user, "1").Wait();
-                }
-            }
+    private static async Task CreateFirstUserAsync(WebApplication app)
+    {
+        using IServiceScope scope = app.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+        const string userName = "admin";
+
+        if (await userManager.FindByNameAsync(userName) is not null) return;
+
+        // Parola yapilandirmadan geliyor; depoda sabit bir parola tutulmuyor.
+        string password = app.Configuration["Seed:AdminPassword"] ?? "1";
+
+        AppUser user = new()
+        {
+            UserName = userName,
+            Email = "admin@tezgah.local",
+            FirstName = "Sistem",
+            LastName = "Yoneticisi",
+            EmailConfirmed = true
+        };
+
+        IdentityResult result = await userManager.CreateAsync(user, password);
+
+        if (!result.Succeeded)
+        {
+            app.Logger.LogError(
+                "Ilk kullanici olusturulamadi: {Errors}",
+                string.Join(", ", result.Errors.Select(e => e.Description)));
         }
     }
 }

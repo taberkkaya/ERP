@@ -1,0 +1,97 @@
+# Coolify üzerinden dağıtım için varyant.
+#
+# Coolify 80/443'te kendi ters vekilini çalıştırıyor ve TLS'i orada sonlandırıyor;
+# bu yüzden burada hiçbir servis host portu yayınlamıyor ve içerideki Caddy Docker
+# ağında düz HTTP konuşuyor. Geri kalan her şey — statik paket, /api yönlendirmesi,
+# demo sandbox davranışı — kendi başına çalışan yığınla aynı.
+#
+# Ortam değişkenleri Coolify arayüzünden veriliyor; .env.example ile aynı isimler.
+services:
+  api:
+    build:
+      context: ./ERPServer
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__SqlServer: >-
+        Server=sqlserver,1433;Database=${MAIN_DB_NAME:-TezgahDb};User Id=sa;
+        Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True
+      Jwt__SecretKey: ${JWT_SECRET}
+      Jwt__Issuer: Tezgah
+      Jwt__Audience: Tezgah
+      Database__MigrateOnStartup: "true"
+      Seed__AdminPassword: ${ADMIN_PASSWORD}
+
+      Demo__Enabled: "true"
+      Demo__SlotCount: ${DEMO_SLOT_COUNT:-3}
+      Demo__DatabaseNamePrefix: ${DEMO_DB_PREFIX:-Tezgah_Demo_}
+      Demo__WriteLimit: ${DEMO_WRITE_LIMIT:-40}
+      Demo__NudgeAfterWrites: ${DEMO_NUDGE_AFTER:-18}
+      Demo__IdleTimeoutMinutes: ${DEMO_IDLE_MINUTES:-5}
+      # Havuz üç sandbox; uzun oturum sıradakini bekletiyor.
+      Demo__AbsoluteTimeoutMinutes: ${DEMO_SESSION_MINUTES:-15}
+      Demo__MemoryThresholdMegabytes: ${DEMO_MEMORY_MB:-1024}
+      Demo__ContactUrl: ${CONTACT_URL:-}
+
+      Cors__AllowedOrigins__0: ""
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      # Coolify dağıtımda yeni konteynere ne zaman geçeceğini buradan anlıyor;
+      # bu olmadan eski konteyner kapanıp yenisi hazır olana kadar açık bir
+      # sayfadan gelen istek boşluğa düşüyor.
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./ERPClient
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      # Alan adını ve sertifikayı Coolify yönetiyor; buradaki Caddy yalnızca
+      # Docker ağında düz HTTP'ye cevap veriyor.
+      SERVICE_FQDN_CLIENT_80: ${SERVICE_FQDN_CLIENT_80}
+      SITE_ADDRESS: ":80"
+    expose:
+      - "80"
+    healthcheck:
+      # Caddy'nin kendi yönetim ucu; site bloğu alan adına bağlı olduğu için
+      # localhost üzerinden içerik istemek doğru cevabı vermez.
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:2019/config/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    restart: unless-stopped
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      MSSQL_PID: Express
+      MSSQL_MEMORY_LIMIT_MB: "1024"
+    ports:
+      # Yalnızca sunucunun kendi localhost'una bağlı: dışarıdan doğrudan
+      # erişilemez. Kendi bilgisayarından bağlanmak için SSH tüneli kuruluyor:
+      #   ssh -N -L 1433:localhost:1433 root@<sunucu>
+      # SQL Server'ı internete açmak sa hesabı yüzünden kabul edilebilir değil.
+      - "127.0.0.1:1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:

@@ -1,0 +1,145 @@
+<tz-page
+  eyebrow="Tanımlar"
+  heading="Ürünler"
+  description="Mamul ve yarı mamul kartları; stok, hareketlerden hesaplanır."
+>
+  <ng-container pageTools>
+    <div class="tz-tabs">
+      <button
+        type="button"
+        class="tz-tab"
+        [class.active]="typeFilter() === 'all'"
+        (click)="typeFilter.set('all')"
+      >
+        Tümü
+      </button>
+      @for (type of productTypes; track type.value) {
+        <button
+          type="button"
+          class="tz-tab"
+          [class.active]="typeFilter() === $any(type.value + '')"
+          (click)="typeFilter.set($any(type.value + ''))"
+        >
+          {{ type.name }}
+        </button>
+      }
+    </div>
+
+    <tz-search [value]="search()" (valueChange)="search.set($event)" placeholder="Ürün adı" />
+    <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+      <tz-icon name="plus" />
+      Yeni ürün
+    </button>
+  </ng-container>
+
+  <tz-panel
+    flush
+    heading="Ürün kartları"
+    [sub]="
+      products().length + ' kayıt' + (outOfStock() ? ' · ' + outOfStock() + ' kalemde stok yok' : '')
+    "
+  >
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!filtered().length) {
+      <tz-empty
+        icon="products"
+        [title]="products().length ? 'Eşleşen ürün yok' : 'Henüz ürün yok'"
+        [text]="
+          products().length
+            ? 'Filtreyi veya arama terimini değiştirin.'
+            : 'Reçete, sipariş ve fatura kalemleri ürün kartlarına bağlanır.'
+        "
+      >
+        @if (!products().length) {
+          <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+            <tz-icon name="plus" />
+            Yeni ürün
+          </button>
+        }
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Ürün</th>
+              <th>Tür</th>
+              <th class="num">Stok</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of filtered(); track product.id) {
+              <tr>
+                <td class="tz-table__primary">{{ product.name }}</td>
+                <td>
+                  <span
+                    class="tz-badge"
+                    [class.tz-badge--accent]="product.productType?.value === 1"
+                    [class.tz-badge--info]="product.productType?.value === 2"
+                  >
+                    {{ product.productType?.name }}
+                  </span>
+                </td>
+                <td class="num" [class.tz-danger]="product.stock <= 0">
+                  {{ product.stock | qty }}
+                </td>
+                <td class="actions">
+                  <button type="button" class="tz-rowbtn" (click)="openEdit(product)" aria-label="Düzenle">
+                    <tz-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(product)"
+                    aria-label="Sil"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (editing(); as model) {
+  <tz-modal [title]="isNew() ? 'Yeni ürün' : 'Ürünü düzenle'" slim (close)="close()">
+    <form #form="ngForm" id="productForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-field">
+        <label for="productName">Ürün adı</label>
+        <input id="productName" name="name" class="tz-input" [(ngModel)]="model.name" required />
+      </div>
+
+      <div class="tz-field">
+        <label for="productType">Tür</label>
+        <select
+          id="productType"
+          name="productTypeValue"
+          class="tz-select"
+          [(ngModel)]="model.productTypeValue"
+          required
+        >
+          @for (type of productTypes; track type.value) {
+            <option [ngValue]="type.value">{{ type.name }}</option>
+          }
+        </select>
+        <div class="tz-hint">
+          Mamul satılan ürün, yarı mamul reçetede kullanılan ara üründür.
+        </div>
+      </div>
+    </form>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="productForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="check" />
+        Kaydet
+      </button>
+    </ng-container>
+  </tz-modal>
+}

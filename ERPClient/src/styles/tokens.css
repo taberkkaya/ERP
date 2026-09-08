@@ -1,0 +1,117 @@
+/* ============================================================================
+   Tezgah — tasarım belirteçleri
+
+   Üretim planlama yazılımının dili: koyu, sakin bir tezgah yüzeyi ve tek bir
+   sıcak sinyal rengi (kehribar). Renk, ölçü ve gölge yalnızca burada tanımlıdır;
+   başka hiçbir dosya çıplak renk değeri yazmaz.
+
+   Tema üç durumda çalışır: varsayılan koyu, `data-theme="light"` ile açık ve
+   kullanıcı hiç seçim yapmadıysa işletim sisteminin tercihi.
+   ========================================================================= */
+
+:root {
+  color-scheme: dark;
+
+  /* --- yüzeyler --------------------------------------------------------- */
+  /* Tezgah yüzeyi: mavi-griye kaçan, siyah olmayan bir zemin. Saf siyah
+     panelleri yüzdürmüyor; katmanlar arası fark okunmuyordu. */
+  --tz-canvas: #0f1216;
+  --tz-surface: #161a20;
+  --tz-surface-2: #1c2129;
+  --tz-surface-3: #232933;
+  --tz-overlay: rgba(6, 8, 11, 0.72);
+
+  /* --- çizgiler --------------------------------------------------------- */
+  --tz-line: #2a313d;
+  --tz-line-soft: #212630;
+  --tz-line-strong: #3a4453;
+
+  /* --- yazı ------------------------------------------------------------- */
+  --tz-ink: #e8ebf0;
+  --tz-ink-2: #a8b1c0;
+  --tz-muted: #6f7889;
+
+  /* --- kehribar: tek imza rengi ----------------------------------------- */
+  /* Tezgah lambası. Uyarı sarısına kaymasın diye turuncuya bir tık yakın. */
+  --tz-accent: #f0a92c;
+  --tz-accent-hi: #ffbe4d;
+  --tz-accent-lo: #c9861a;
+  --tz-accent-ink: #1a1206;
+  --tz-accent-soft: rgba(240, 169, 44, 0.13);
+  --tz-accent-ring: rgba(240, 169, 44, 0.32);
+
+  /* --- durum ------------------------------------------------------------ */
+  --tz-ok: #46c98b;
+  --tz-ok-soft: rgba(70, 201, 139, 0.13);
+  --tz-warn: #e8a33d;
+  --tz-warn-soft: rgba(232, 163, 61, 0.13);
+  --tz-danger: #f4685f;
+  --tz-danger-soft: rgba(244, 104, 95, 0.13);
+  --tz-info: #5fb3e8;
+  --tz-info-soft: rgba(95, 179, 232, 0.13);
+
+  /* --- ölçüler ---------------------------------------------------------- */
+  --tz-rail: 246px;
+  --tz-rail-collapsed: 68px;
+  --tz-topbar: 58px;
+  --tz-radius: 10px;
+  --tz-radius-sm: 7px;
+  --tz-radius-lg: 16px;
+
+  /* --- gölgeler --------------------------------------------------------- */
+  --tz-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --tz-shadow: 0 2px 6px rgba(0, 0, 0, 0.34), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --tz-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
+
+  /* --- yazı tipleri ----------------------------------------------------- */
+  /* Başlıklarda geometrik bir grotesk, rakamlarda tabular monospace. Miktar ve
+     tutar sütunları alt alta hizalanmadan tablo okunmuyor. */
+  --tz-font: "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --tz-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono",
+    "Consolas", monospace;
+
+  /* --- hareket ---------------------------------------------------------- */
+  --tz-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --tz-fast: 120ms var(--tz-ease);
+  --tz-slow: 260ms var(--tz-ease);
+}
+
+/* Açık tema. Kehribar açık zeminde yıkanıyor; metin ve kenarlıklarda daha koyu
+   bir tonu, dolgularda ise koyu temadakini kullanıyoruz. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --tz-canvas: #eef0f3;
+  --tz-surface: #ffffff;
+  --tz-surface-2: #f7f8fa;
+  --tz-surface-3: #eceef2;
+  --tz-overlay: rgba(23, 26, 32, 0.42);
+
+  --tz-line: #dfe2e8;
+  --tz-line-soft: #eaecf0;
+  --tz-line-strong: #c6cbd4;
+
+  --tz-ink: #171a20;
+  --tz-ink-2: #4d5563;
+  --tz-muted: #838b99;
+
+  --tz-accent: #a86a08;
+  --tz-accent-hi: #8d580a;
+  --tz-accent-lo: #c9861a;
+  --tz-accent-ink: #ffffff;
+  --tz-accent-soft: rgba(200, 134, 26, 0.12);
+  --tz-accent-ring: rgba(168, 106, 8, 0.24);
+
+  --tz-ok: #16875a;
+  --tz-ok-soft: rgba(22, 135, 90, 0.1);
+  --tz-warn: #9a6410;
+  --tz-warn-soft: rgba(154, 100, 16, 0.1);
+  --tz-danger: #c8342c;
+  --tz-danger-soft: rgba(200, 52, 44, 0.1);
+  --tz-info: #1d6fa5;
+  --tz-info-soft: rgba(29, 111, 165, 0.1);
+
+  --tz-shadow-sm: 0 1px 2px rgba(23, 26, 32, 0.06);
+  --tz-shadow: 0 1px 3px rgba(23, 26, 32, 0.09), 0 1px 2px rgba(23, 26, 32, 0.05);
+  --tz-shadow-lg: 0 20px 48px rgba(23, 26, 32, 0.2);
+}

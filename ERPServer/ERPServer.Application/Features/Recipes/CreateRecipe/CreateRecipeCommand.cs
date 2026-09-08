@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using MapsterMapper;
 using ERPServer.Domain.Dtos;
 using MediatR;
 using TS.Result;

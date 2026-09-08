@@ -1,0 +1,89 @@
+# Tezgah — kendi başına çalışan yığın.
+#
+# Caddy hem statik paketi sunuyor hem de /api isteklerini API konteynerine
+# yönlendiriyor, böylece tarayıcı tarafında cross-origin çağrı olmuyor.
+# Değerler .env dosyasından geliyor; .env.example bunları anlatıyor.
+services:
+  api:
+    build:
+      context: ./ERPServer
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__SqlServer: >-
+        Server=sqlserver,1433;Database=${MAIN_DB_NAME:-TezgahDb};User Id=sa;
+        Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True
+      Jwt__SecretKey: ${JWT_SECRET}
+      Jwt__Issuer: Tezgah
+      Jwt__Audience: Tezgah
+      Database__MigrateOnStartup: "true"
+      Seed__AdminPassword: ${ADMIN_PASSWORD}
+
+      # Demo havuzu. Sandbox veritabanları aynı sunucuda, aynı kimlik bilgileriyle
+      # açılıyor; ayrı bir bağlantı tanımlamaya gerek yok.
+      Demo__Enabled: ${DEMO_ENABLED:-true}
+      Demo__SlotCount: ${DEMO_SLOT_COUNT:-3}
+      Demo__DatabaseNamePrefix: ${DEMO_DB_PREFIX:-Tezgah_Demo_}
+      Demo__WriteLimit: ${DEMO_WRITE_LIMIT:-40}
+      Demo__NudgeAfterWrites: ${DEMO_NUDGE_AFTER:-18}
+      Demo__IdleTimeoutMinutes: ${DEMO_IDLE_MINUTES:-5}
+      Demo__AbsoluteTimeoutMinutes: ${DEMO_SESSION_MINUTES:-15}
+      Demo__MemoryThresholdMegabytes: ${DEMO_MEMORY_MB:-1024}
+      Demo__ContactUrl: ${CONTACT_URL:-}
+
+      # İstemci API'ye Caddy üzerinden, aynı origin'den ulaşıyor: CORS kaydı yok.
+      Cors__AllowedOrigins__0: ""
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      # Migration ve demo havuzunun hazırlanması birkaç saniye sürüyor.
+      start_period: 60s
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./ERPClient
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+      - "${HTTPS_PORT:-8443}:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      # Express ücretsiz ve bu iş için fazlasıyla yeterli; bellek iştahı da
+      # sınırlı, VPS'te yer dar.
+      MSSQL_PID: Express
+      MSSQL_MEMORY_LIMIT_MB: "1024"
+    ports:
+      # Yalnızca sunucunun kendi localhost'una bağlı. Kendi bilgisayarınızdan
+      # bağlanmak için SSH tüneli:  ssh -N -L 1433:localhost:1433 root@<sunucu>
+      - "127.0.0.1:1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:
+  caddy-data:
+  caddy-config:

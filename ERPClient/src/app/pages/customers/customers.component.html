@@ -1,0 +1,153 @@
+<tz-page
+  eyebrow="Tanımlar"
+  heading="Müşteriler"
+  description="Sipariş ve faturaların bağlandığı cari kayıtlar."
+>
+  <ng-container pageTools>
+    <tz-search
+      [value]="search()"
+      (valueChange)="search.set($event)"
+      placeholder="Ünvan, şehir, vergi no"
+    />
+    <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+      <tz-icon name="plus" />
+      Yeni müşteri
+    </button>
+  </ng-container>
+
+  <tz-panel flush>
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!filtered().length) {
+      <tz-empty
+        icon="customers"
+        [title]="search() ? 'Eşleşen müşteri yok' : 'Henüz müşteri yok'"
+        [text]="
+          search()
+            ? 'Arama terimini değiştirip yeniden deneyin.'
+            : 'Sipariş açabilmek için önce en az bir müşteri tanımlayın.'
+        "
+      >
+        @if (!search()) {
+          <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+            <tz-icon name="plus" />
+            Yeni müşteri
+          </button>
+        }
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Ünvan</th>
+              <th>Vergi dairesi</th>
+              <th>Vergi no</th>
+              <th>Konum</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (customer of filtered(); track customer.id) {
+              <tr>
+                <td>
+                  <div class="tz-table__primary">{{ customer.name }}</div>
+                  @if (customer.address) {
+                    <div class="tz-table__meta tz-truncate" style="max-width: 320px">
+                      {{ customer.address }}
+                    </div>
+                  }
+                </td>
+                <td>{{ customer.taxDepartment || '—' }}</td>
+                <td class="num">{{ customer.taxNumber || '—' }}</td>
+                <td>
+                  @if (customer.city || customer.town) {
+                    {{ customer.town }}{{ customer.town && customer.city ? ' / ' : ''
+                    }}{{ customer.city }}
+                  } @else {
+                    —
+                  }
+                </td>
+                <td class="actions">
+                  <button
+                    type="button"
+                    class="tz-rowbtn"
+                    (click)="openEdit(customer)"
+                    aria-label="Düzenle"
+                  >
+                    <tz-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(customer)"
+                    aria-label="Sil"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (editing(); as model) {
+  <tz-modal [title]="isNew() ? 'Yeni müşteri' : 'Müşteriyi düzenle'" (close)="close()">
+    <form #form="ngForm" id="customerForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-field">
+        <label for="name">Ünvan</label>
+        <input id="name" name="name" class="tz-input" [(ngModel)]="model.name" required />
+      </div>
+
+      <div class="tz-cols">
+        <div class="tz-field">
+          <label for="taxDepartment">Vergi dairesi</label>
+          <input
+            id="taxDepartment"
+            name="taxDepartment"
+            class="tz-input"
+            [(ngModel)]="model.taxDepartment"
+          />
+        </div>
+        <div class="tz-field">
+          <label for="taxNumber">Vergi numarası</label>
+          <input
+            id="taxNumber"
+            name="taxNumber"
+            class="tz-input"
+            inputmode="numeric"
+            [(ngModel)]="model.taxNumber"
+          />
+        </div>
+      </div>
+
+      <div class="tz-cols">
+        <div class="tz-field">
+          <label for="city">Şehir</label>
+          <input id="city" name="city" class="tz-input" [(ngModel)]="model.city" />
+        </div>
+        <div class="tz-field">
+          <label for="town">İlçe</label>
+          <input id="town" name="town" class="tz-input" [(ngModel)]="model.town" />
+        </div>
+      </div>
+
+      <div class="tz-field">
+        <label for="address">Adres</label>
+        <textarea id="address" name="address" class="tz-textarea" [(ngModel)]="model.address"></textarea>
+      </div>
+    </form>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="customerForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="check" />
+        Kaydet
+      </button>
+    </ng-container>
+  </tz-modal>
+}

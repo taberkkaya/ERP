@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using MapsterMapper;
 using ERPServer.Domain.Entities;
 using ERPServer.Domain.Repository;
 using GenericRepository;
@@ -18,9 +18,10 @@ internal sealed class CreateProductionCommandHandler(
 {
     public async Task<Result<string>> Handle(CreateProductionCommand request, CancellationToken cancellationToken)
     {
-        Production production = mapper.Map<Production>(request);
+        if (request.Quantity <= 0)
+            return Result<string>.Failure("Üretim miktarı sıfırdan büyük olmalı.");
 
-        List<StockMovement> newMovements = new();
+        Production production = mapper.Map<Production>(request);
 
         Recipe? recipe = await recipeRepository
             .Where(p => p.ProductId == request.ProductId)
@@ -28,74 +29,90 @@ internal sealed class CreateProductionCommandHandler(
             .ThenInclude(p => p.Product)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (recipe is not null && recipe.Details is not null)
+        if (recipe?.Details is null || recipe.Details.Count == 0)
+            return Result<string>.Failure("Bu ürünün reçetesi tanımlı değil, üretim yapılamaz.");
+
+        List<StockMovement> newMovements = new();
+
+        // Üretilen mamulün maliyeti, tüketilen bileşenlerin maliyetlerinin toplamı.
+        decimal consumedCost = 0;
+
+        foreach (RecipeDetail detail in recipe.Details)
         {
-            var details = recipe.Details;
+            // Reçete bir birim için yazılır; ihtiyaç üretim adediyle ölçeklenir.
+            decimal required = detail.Quantity * request.Quantity;
 
-            foreach (var item in details)
+            List<StockMovement> movements = await stockMovementRepository
+                .Where(p => p.ProductId == detail.ProductId)
+                .ToListAsync(cancellationToken);
+
+            decimal stock = movements.Sum(p => p.NumberOfEntries - p.NumberOfOutputs);
+
+            if (required > stock)
+                return Result<string>.Failure(
+                    $"{detail.Product!.Name} ürününden üretim için yeterli miktar yok. Eksik miktar: {required - stock}");
+
+            decimal unitCost = AverageEntryPrice(movements);
+            decimal remaining = required;
+
+            // Stok birden çok depoya dağılmış olabiliyor; ihtiyaç karşılanana kadar
+            // depolar sırayla düşülüyor.
+            foreach (Guid depotId in movements.Select(p => p.DepotId).Distinct())
             {
-                List<StockMovement> movements = await stockMovementRepository
-                    .Where(p => p.ProductId == item.ProductId)
-                    .ToListAsync(cancellationToken);
+                if (remaining <= 0) break;
 
-                List<Guid> depotIds = movements
-                    .GroupBy(p => p.DepotId)
-                    .Select(g => g.Key)
-                    .ToList();
+                decimal available = movements
+                    .Where(p => p.DepotId == depotId)
+                    .Sum(s => s.NumberOfEntries - s.NumberOfOutputs);
 
-                decimal stock = movements.Sum(p => p.NumberOfEntries) - movements.Sum(p => p.NumberOfOutputs);
+                if (available <= 0) continue;
 
-                if (item.Quantity > stock)
+                decimal taken = Math.Min(remaining, available);
+
+                newMovements.Add(new StockMovement
                 {
-                    return Result<string>
-                        .Failure(item.Product!.Name + " ürününden üretim için yeterli miktarda yok. Eksik miktar: " + (item.Quantity - stock));
-                }
+                    ProductionId = production.Id,
+                    ProductId = detail.ProductId,
+                    DepotId = depotId,
+                    Price = unitCost,
+                    NumberOfOutputs = taken
+                });
 
-                foreach (var depotId in depotIds)
-                {
-                    if (item.Quantity <= 0)
-                        break;
-
-                    decimal quantity = movements
-                        .Where(p => p.DepotId == depotId)
-                        .Sum(s => s.NumberOfEntries - s.NumberOfOutputs);
-
-                    decimal totalAmount = movements
-                        .Where(p => p.DepotId == depotId 
-                        && p.NumberOfEntries > 0)
-                        .Sum(s => s.Price * s.NumberOfEntries);
-
-                    decimal totalEntriesQuantity = movements
-                        .Where(p => p.DepotId == depotId
-                        && p.NumberOfEntries > 0)
-                        .Count();
-
-                    decimal price = totalAmount / totalEntriesQuantity;
-
-                    StockMovement stockMovement = new()
-                    {
-                        ProductionId = production.Id,
-                        ProductId = item.ProductId,
-                        DepotId = depotId,   
-                        Price = price,
-                    };
-
-                    if(item.Quantity <= quantity)
-                        stockMovement.NumberOfOutputs = item.Quantity;
-                    else
-                        stockMovement.NumberOfOutputs = quantity;
-
-                    item.Quantity -= quantity;
-
-                    newMovements.Add(stockMovement);
-                }
+                remaining -= taken;
+                consumedCost += taken * unitCost;
             }
         }
-        await stockMovementRepository.AddRangeAsync(newMovements);
 
+        // Üretilen mamul stoğa giriyor. Bu hareket olmadan üretim kaydı açılıyor ama
+        // ürünün stoğu hiç artmıyordu; sipariş de hiçbir zaman karşılanamıyordu.
+        newMovements.Add(new StockMovement
+        {
+            ProductionId = production.Id,
+            ProductId = request.ProductId,
+            DepotId = request.DepotId,
+            Price = consumedCost / request.Quantity,
+            NumberOfEntries = request.Quantity
+        });
+
+        await stockMovementRepository.AddRangeAsync(newMovements, cancellationToken);
         await productionRepository.AddAsync(production, cancellationToken);
-
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return "Ürün başarıyla üretildi.";
+
+        return "Üretim kaydı oluşturuldu, mamul stoğa alındı.";
+    }
+
+    /// <summary>
+    /// Girişlerin ağırlıklı ortalama birim maliyeti. Toplam tutarı hareket sayısına
+    /// bölmek, farklı miktarlı girişlerde maliyeti tamamen yanlış veriyordu.
+    /// </summary>
+    private static decimal AverageEntryPrice(List<StockMovement> movements)
+    {
+        decimal enteredQuantity = movements.Sum(p => p.NumberOfEntries);
+
+        if (enteredQuantity <= 0) return 0;
+
+        decimal enteredAmount = movements.Sum(p => p.Price * p.NumberOfEntries);
+
+        return enteredAmount / enteredQuantity;
     }
 }

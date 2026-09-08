@@ -1,0 +1,206 @@
+<tz-page
+  eyebrow="Genel Bakış"
+  heading="Panel"
+  description="Açık siparişler, stok durumu ve son üretim hareketleri."
+>
+  @if (loading()) {
+    <div class="tz-loading"><span class="tz-spinner"></span> Veriler toplanıyor</div>
+  } @else {
+    <div class="tz-grid tz-grid--4">
+      <div class="tz-stat tz-stat--warn">
+        <div class="tz-stat__label"><tz-icon name="orders" /> Açık sipariş</div>
+        <div class="tz-stat__value">{{ openOrders().length }}</div>
+        <div class="tz-stat__foot">{{ pendingOrders().length }} tanesi henüz planlanmadı</div>
+      </div>
+
+      <div class="tz-stat">
+        <div class="tz-stat__label"><tz-icon name="spark" /> Açık sipariş tutarı</div>
+        <div class="tz-stat__value">{{ openOrderValue() | money }}<small>₺</small></div>
+        <div class="tz-stat__foot">Tamamlanmamış belgeler</div>
+      </div>
+
+      <div class="tz-stat" [class.tz-stat--danger]="outOfStock().length > 0">
+        <div class="tz-stat__label"><tz-icon name="products" /> Stoğu biten kalem</div>
+        <div class="tz-stat__value">{{ outOfStock().length }}</div>
+        <div class="tz-stat__foot">{{ products().length }} ürün kartı içinde</div>
+      </div>
+
+      <div class="tz-stat tz-stat--ok">
+        <div class="tz-stat__label"><tz-icon name="production" /> Üretim kaydı</div>
+        <div class="tz-stat__value">{{ productions().length }}</div>
+        <div class="tz-stat__foot">Toplam iş emri</div>
+      </div>
+    </div>
+
+    <div class="tz-grid tz-grid--2 tz-mt">
+      <tz-panel
+        flush
+        heading="Yaklaşan teslimler"
+        sub="Teslim tarihi en yakın açık siparişler"
+      >
+        <ng-container panelTools>
+          <a class="tz-btn tz-btn--sm" routerLink="/siparisler">
+            Tümü
+            <tz-icon name="arrow-right" />
+          </a>
+        </ng-container>
+
+        @if (!upcoming().length) {
+          <tz-empty icon="check-circle" title="Açık sipariş yok" text="Tüm siparişler tamamlandı." />
+        } @else {
+          <div class="tz-tablewrap">
+            <table class="tz-table">
+              <thead>
+                <tr>
+                  <th>Belge</th>
+                  <th>Müşteri</th>
+                  <th>Teslim</th>
+                  <th>Durum</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (order of upcoming(); track order.id) {
+                  <tr>
+                    <td class="num tz-table__primary">{{ order.number }}</td>
+                    <td class="tz-truncate" style="max-width: 180px">{{ order.customer?.name }}</td>
+                    <td class="num" [class.tz-danger]="isLate(order)">
+                      {{ order.deliveryDate | trDate }}
+                    </td>
+                    <td>
+                      <span [class]="'tz-badge ' + statusClass(order.status?.value)">
+                        {{ order.status?.name }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </tz-panel>
+
+      <tz-panel flush heading="Stok izleme" sub="En düşük stoklu ürün kartları">
+        <ng-container panelTools>
+          <a class="tz-btn tz-btn--sm" routerLink="/urunler">
+            Tümü
+            <tz-icon name="arrow-right" />
+          </a>
+        </ng-container>
+
+        @if (!stockWatch().length) {
+          <tz-empty icon="products" title="Ürün yok" text="Önce ürün kartlarını tanımlayın." />
+        } @else {
+          <div class="tz-tablewrap">
+            <table class="tz-table">
+              <thead>
+                <tr>
+                  <th>Ürün</th>
+                  <th>Tür</th>
+                  <th class="num">Stok</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (product of stockWatch(); track product.id) {
+                  <tr>
+                    <td class="tz-truncate" style="max-width: 220px">{{ product.name }}</td>
+                    <td>
+                      <span class="tz-badge tz-badge--neutral">{{ product.productType?.name }}</span>
+                    </td>
+                    <td class="num" [class.tz-danger]="product.stock <= 0">
+                      {{ product.stock | qty }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </tz-panel>
+    </div>
+
+    <div class="tz-grid tz-grid--2 tz-mt">
+      <tz-panel flush heading="Son üretimler" sub="Reçeteler patlatılarak işlenen kayıtlar">
+        <ng-container panelTools>
+          <a class="tz-btn tz-btn--sm" routerLink="/uretim">
+            Tümü
+            <tz-icon name="arrow-right" />
+          </a>
+        </ng-container>
+
+        @if (!recentProductions().length) {
+          <tz-empty
+            icon="production"
+            title="Üretim kaydı yok"
+            text="İlk üretim kaydını açtığınızda burada listelenir."
+          />
+        } @else {
+          <div class="tz-tablewrap">
+            <table class="tz-table">
+              <thead>
+                <tr>
+                  <th>Ürün</th>
+                  <th>Depo</th>
+                  <th class="num">Miktar</th>
+                  <th class="num">Tarih</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (production of recentProductions(); track production.id) {
+                  <tr>
+                    <td class="tz-truncate" style="max-width: 180px">
+                      {{ production.product?.name }}
+                    </td>
+                    <td>{{ production.depot?.name }}</td>
+                    <td class="num">{{ production.quantity | qty }}</td>
+                    <td class="num">{{ production.createdAt | trDate }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </tz-panel>
+
+      <tz-panel heading="Fatura hareketi" sub="Kesilen alış ve satış belgelerinin toplamı">
+        <div class="tz-stack">
+          <div>
+            <div class="tz-row tz-row--between">
+              <span class="tz-row" style="gap: 7px">
+                <tz-icon name="invoice-in" style="width: 15px; height: 15px" />
+                Alış faturaları
+              </span>
+              <span class="tz-num tz-strong">{{ purchaseTotal() | money }} ₺</span>
+            </div>
+            <div class="tz-small tz-muted">{{ purchases().length }} belge · stok girişi</div>
+          </div>
+
+          <hr />
+
+          <div>
+            <div class="tz-row tz-row--between">
+              <span class="tz-row" style="gap: 7px">
+                <tz-icon name="invoice-out" style="width: 15px; height: 15px" />
+                Satış faturaları
+              </span>
+              <span class="tz-num tz-strong">{{ salesTotal() | money }} ₺</span>
+            </div>
+            <div class="tz-small tz-muted">{{ sales().length }} belge · stok çıkışı</div>
+          </div>
+
+          <hr />
+
+          <div class="tz-row tz-row--between">
+            <span class="tz-strong">Fark</span>
+            <span
+              class="tz-num tz-strong"
+              [class.tz-ok]="salesTotal() - purchaseTotal() >= 0"
+              [class.tz-danger]="salesTotal() - purchaseTotal() < 0"
+            >
+              {{ salesTotal() - purchaseTotal() | money }} ₺
+            </span>
+          </div>
+        </div>
+      </tz-panel>
+    </div>
+  }
+</tz-page>

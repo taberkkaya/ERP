@@ -1,70 +1,86 @@
-import { Routes } from '@angular/router';
-import { LoginComponent } from './components/login/login.component';
-import { LayoutsComponent } from './components/layouts/layouts.component';
-import { HomeComponent } from './components/home/home.component';
 import { inject } from '@angular/core';
-import { AuthService } from './services/auth.service';
-import { CustomersComponent } from './components/customers/customers.component';
-import { DepotsComponent } from './components/depots/depots.component';
-import { ProductsComponent } from './components/products/products.component';
-import { RecipesComponent } from './components/recipes/recipes.component';
-import { RecipeDetailsComponent } from './components/recipe-details/recipe-details.component';
-import { OrdersComponent } from './components/orders/orders.component';
-import { RequirementsPlanningComponent } from './components/requirements-planning/requirements-planning.component';
-import { InvoicesComponent } from './components/invoices/invoices.component';
-import { ProductionsComponent } from './components/productions/productions.component';
+import { Routes } from '@angular/router';
+import { AuthService } from './core/auth.service';
+import { ShellComponent } from './layout/shell.component';
 
+/**
+ * Yollar Türkçe: uygulamanın dili Türkçe ve adres çubuğu da arayüzün bir parçası.
+ *
+ * Ekranlar tembel yükleniyor; giriş ekranına gelen bir ziyaretçi, hiç açmayacağı
+ * fatura veya üretim ekranını indirmek zorunda kalmıyor.
+ */
 export const routes: Routes = [
   {
-    path: 'login',
-    component: LoginComponent,
+    path: 'giris',
+    title: 'Giriş · Tezgah',
+    loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: '',
-    component: LayoutsComponent,
+    component: ShellComponent,
     canActivateChild: [() => inject(AuthService).isAuthenticated()],
     children: [
       {
         path: '',
-        component: HomeComponent,
+        data: { title: 'Panel' },
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
-        path: 'customers',
-        component: CustomersComponent,
+        path: 'musteriler',
+        data: { title: 'Müşteriler' },
+        loadComponent: () =>
+          import('./pages/customers/customers.component').then((m) => m.CustomersComponent),
       },
       {
-        path: 'depots',
-        component: DepotsComponent,
+        path: 'depolar',
+        data: { title: 'Depolar' },
+        loadComponent: () => import('./pages/depots/depots.component').then((m) => m.DepotsComponent),
       },
       {
-        path: 'products',
-        component: ProductsComponent,
+        path: 'urunler',
+        data: { title: 'Ürünler' },
+        loadComponent: () =>
+          import('./pages/products/products.component').then((m) => m.ProductsComponent),
       },
       {
-        path: 'recipes',
-        component: RecipesComponent,
+        path: 'receteler',
+        data: { title: 'Reçeteler' },
+        loadComponent: () =>
+          import('./pages/recipes/recipes.component').then((m) => m.RecipesComponent),
       },
       {
-        path: 'recipe-details/:id',
-        component: RecipeDetailsComponent,
+        path: 'receteler/:id',
+        data: { title: 'Reçete Detayı' },
+        loadComponent: () =>
+          import('./pages/recipe-detail/recipe-detail.component').then(
+            (m) => m.RecipeDetailComponent
+          ),
       },
       {
-        path: 'orders',
-        component: OrdersComponent,
+        path: 'siparisler',
+        data: { title: 'Siparişler' },
+        loadComponent: () => import('./pages/orders/orders.component').then((m) => m.OrdersComponent),
       },
       {
-        path: 'invoices/:type',
-        component: InvoicesComponent,
+        path: 'siparisler/:orderId/ihtiyac-plani',
+        data: { title: 'İhtiyaç Planlama' },
+        loadComponent: () =>
+          import('./pages/planning/planning.component').then((m) => m.PlanningComponent),
       },
       {
-        path: 'productions',
-        component: ProductionsComponent,
+        path: 'faturalar/:type',
+        data: { title: 'Faturalar' },
+        loadComponent: () =>
+          import('./pages/invoices/invoices.component').then((m) => m.InvoicesComponent),
+      },
+      {
+        path: 'uretim',
+        data: { title: 'Üretim' },
+        loadComponent: () =>
+          import('./pages/productions/productions.component').then((m) => m.ProductionsComponent),
       },
     ],
   },
-  {
-    path: 'requirements-planning/:orderId',
-    component: RequirementsPlanningComponent,
-    canActivate: [() => inject(AuthService).isAuthenticated()],
-  },
+  { path: '**', redirectTo: '' },
 ];

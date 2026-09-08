@@ -1,0 +1,188 @@
+<tz-page
+  eyebrow="Tanımlar"
+  heading="Reçeteler"
+  description="Bir mamulün hangi bileşenlerden ne kadar tükettiği. Üretim ve ihtiyaç planı buradan okunur."
+>
+  <ng-container pageTools>
+    <tz-search [value]="search()" (valueChange)="search.set($event)" placeholder="Ürün adı" />
+    <button
+      type="button"
+      class="tz-btn tz-btn--primary"
+      (click)="openCreate()"
+      [disabled]="!headOptions().length"
+    >
+      <tz-icon name="plus" />
+      Yeni reçete
+    </button>
+  </ng-container>
+
+  <tz-panel flush>
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!filtered().length) {
+      <tz-empty
+        icon="recipes"
+        [title]="recipes().length ? 'Eşleşen reçete yok' : 'Henüz reçete yok'"
+        text="Reçetesi olmayan ürün üretilemez ve ihtiyaç planında bileşen çıkarmaz."
+      >
+        @if (!recipes().length && headOptions().length) {
+          <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+            <tz-icon name="plus" />
+            Yeni reçete
+          </button>
+        }
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Ürün</th>
+              <th>Tür</th>
+              <th class="num">Bileşen</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (recipe of filtered(); track recipe.id) {
+              <tr>
+                <td class="tz-table__primary">{{ recipe.product?.name }}</td>
+                <td>
+                  <span class="tz-badge tz-badge--neutral">
+                    {{ recipe.product?.productType?.name || 'Mamul' }}
+                  </span>
+                </td>
+                <td class="num">{{ recipe.details?.length || 0 }}</td>
+                <td class="actions">
+                  <a
+                    class="tz-btn tz-btn--sm"
+                    [routerLink]="['/receteler', recipe.id]"
+                    aria-label="Bileşenleri aç"
+                  >
+                    Bileşenler
+                    <tz-icon name="arrow-right" />
+                  </a>
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(recipe)"
+                    aria-label="Sil"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (creating()) {
+  <tz-modal title="Yeni reçete" wide (close)="close()">
+    <form #form="ngForm" id="recipeForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-field">
+        <label for="headProduct">Reçetesi tanımlanacak ürün</label>
+        <select
+          id="headProduct"
+          name="headProductId"
+          class="tz-select"
+          [ngModel]="headProductId()"
+          (ngModelChange)="headProductId.set($event)"
+          required
+        >
+          <option value="">Ürün seçin</option>
+          @for (product of headOptions(); track product.id) {
+            <option [value]="product.id">{{ product.name }}</option>
+          }
+        </select>
+      </div>
+    </form>
+
+    <div class="tz-label">Bileşenler</div>
+    <div class="tz-lines">
+      <div class="tz-lines__form" style="grid-template-columns: 1fr 140px auto">
+        <div class="tz-field">
+          <label for="lineProduct">Bileşen</label>
+          <select
+            id="lineProduct"
+            class="tz-select"
+            [ngModel]="lineProductId()"
+            (ngModelChange)="lineProductId.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option value="">Seçin</option>
+            @for (product of lineOptions(); track product.id) {
+              <option [value]="product.id">{{ product.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="tz-field">
+          <label for="lineQty">Miktar</label>
+          <input
+            id="lineQty"
+            type="number"
+            min="0"
+            step="any"
+            class="tz-input"
+            [ngModel]="lineQuantity()"
+            (ngModelChange)="lineQuantity.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        </div>
+
+        <div class="tz-lines__add">
+          <button type="button" class="tz-btn" (click)="addLine()">
+            <tz-icon name="plus" />
+            Ekle
+          </button>
+        </div>
+      </div>
+
+      @if (lines().length) {
+        <div class="tz-tablewrap">
+          <table class="tz-table">
+            <thead>
+              <tr>
+                <th>Bileşen</th>
+                <th class="num">Miktar</th>
+                <th class="actions"><span class="tz-sr">İşlemler</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of lines(); track line.productId; let i = $index) {
+                <tr>
+                  <td>{{ line.name }}</td>
+                  <td class="num">{{ line.quantity | qty }}</td>
+                  <td class="actions">
+                    <button
+                      type="button"
+                      class="tz-rowbtn tz-rowbtn--danger"
+                      (click)="removeLine(i)"
+                      aria-label="Satırı kaldır"
+                    >
+                      <tz-icon name="close" />
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="tz-loading">Henüz bileşen eklenmedi.</div>
+      }
+    </div>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="recipeForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="check" />
+        Reçeteyi kaydet
+      </button>
+    </ng-container>
+  </tz-modal>
+}

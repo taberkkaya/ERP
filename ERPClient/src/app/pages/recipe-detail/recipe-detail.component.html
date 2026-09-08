@@ -1,0 +1,124 @@
+<tz-page
+  eyebrow="Reçete"
+  [heading]="recipe()?.product?.name || 'Reçete detayı'"
+  description="Bir birim üretim için tüketilen bileşenler."
+>
+  <ng-container pageTools>
+    <a class="tz-btn" routerLink="/receteler">
+      <tz-icon name="chevron" style="transform: rotate(90deg)" />
+      Reçeteler
+    </a>
+    <button
+      type="button"
+      class="tz-btn tz-btn--primary"
+      (click)="openCreate()"
+      [disabled]="loading() || !options().length"
+    >
+      <tz-icon name="plus" />
+      Bileşen ekle
+    </button>
+  </ng-container>
+
+  <tz-panel flush>
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!recipe()) {
+      <tz-empty icon="alert" title="Reçete bulunamadı" text="Kayıt silinmiş olabilir." />
+    } @else if (!recipe()?.details?.length) {
+      <tz-empty
+        icon="recipes"
+        title="Bileşen yok"
+        text="Bu reçete boş. Üretim çalıştırıldığında hiçbir hammadde düşülmez."
+      >
+        <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+          <tz-icon name="plus" />
+          Bileşen ekle
+        </button>
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Bileşen</th>
+              <th>Tür</th>
+              <th class="num">Miktar</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (detail of recipe()!.details ?? []; track detail.id) {
+              <tr>
+                <td class="tz-table__primary">{{ detail.product?.name }}</td>
+                <td>
+                  <span class="tz-badge tz-badge--neutral">
+                    {{ detail.product?.productType?.name || '—' }}
+                  </span>
+                </td>
+                <td class="num">{{ detail.quantity | qty }}</td>
+                <td class="actions">
+                  <button type="button" class="tz-rowbtn" (click)="openEdit(detail)" aria-label="Düzenle">
+                    <tz-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(detail)"
+                    aria-label="Kaldır"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (editing(); as draft) {
+  <tz-modal [title]="isNew() ? 'Bileşen ekle' : 'Bileşeni düzenle'" slim (close)="close()">
+    <form #form="ngForm" id="detailForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-field">
+        <label for="detailProduct">Bileşen</label>
+        <select
+          id="detailProduct"
+          name="productId"
+          class="tz-select"
+          [(ngModel)]="draft.productId"
+          required
+        >
+          <option value="">Seçin</option>
+          @for (product of options(); track product.id) {
+            <option [value]="product.id">{{ product.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="tz-field">
+        <label for="detailQty">Miktar</label>
+        <input
+          id="detailQty"
+          name="quantity"
+          type="number"
+          min="0"
+          step="any"
+          class="tz-input"
+          [(ngModel)]="draft.quantity"
+          required
+        />
+        <div class="tz-hint">Bir birim mamul üretmek için gereken miktar.</div>
+      </div>
+    </form>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="detailForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="check" />
+        Kaydet
+      </button>
+    </ng-container>
+  </tz-modal>
+}

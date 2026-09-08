@@ -1,0 +1,4 @@
+{
+  "_comment": "apiUrl bos birakilirsa derleme sirasindaki adres kullanilir. API baska bir alan adindan servis ediliyorsa buraya yazin: https://api.ornek.com/api",
+  "apiUrl": ""
+}

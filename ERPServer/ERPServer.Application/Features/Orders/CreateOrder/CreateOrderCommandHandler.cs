@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using MapsterMapper;
 using ERPServer.Domain.Entities;
 using ERPServer.Domain.Repository;
 using GenericRepository;

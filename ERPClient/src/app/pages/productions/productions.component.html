@@ -1,0 +1,158 @@
+<tz-page
+  eyebrow="İş Akışı"
+  heading="Üretim"
+  description="Üretim kaydı reçetedeki bileşenleri depodan düşer, mamulü stoğa alır."
+>
+  <ng-container pageTools>
+    <tz-search [value]="search()" (valueChange)="search.set($event)" placeholder="Ürün, depo" />
+    <button
+      type="button"
+      class="tz-btn tz-btn--primary"
+      (click)="open()"
+      [disabled]="!producible().length || !depots().length"
+    >
+      <tz-icon name="plus" />
+      Üretim yap
+    </button>
+  </ng-container>
+
+  <div class="tz-grid tz-grid--4 tz-mb">
+    <div class="tz-stat">
+      <div class="tz-stat__label"><tz-icon name="production" /> Üretim kaydı</div>
+      <div class="tz-stat__value">{{ productions().length }}</div>
+      <div class="tz-stat__foot">Toplam iş emri</div>
+    </div>
+    <div class="tz-stat tz-stat--ok">
+      <div class="tz-stat__label"><tz-icon name="products" /> Üretilen miktar</div>
+      <div class="tz-stat__value">{{ totalProduced() | qty }}</div>
+      <div class="tz-stat__foot">Tüm kayıtların toplamı</div>
+    </div>
+    <div class="tz-stat tz-stat--info">
+      <div class="tz-stat__label"><tz-icon name="recipes" /> Üretilebilir ürün</div>
+      <div class="tz-stat__value">{{ producible().length }}</div>
+      <div class="tz-stat__foot">Reçetesi tanımlı</div>
+    </div>
+  </div>
+
+  <tz-panel flush>
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!producible().length) {
+      <tz-empty
+        icon="recipes"
+        title="Üretilebilir ürün yok"
+        text="Üretim yapabilmek için önce ürünün reçetesini tanımlayın."
+      >
+        <a class="tz-btn tz-btn--primary" routerLink="/receteler">
+          <tz-icon name="recipes" />
+          Reçetelere git
+        </a>
+      </tz-empty>
+    } @else if (!filtered().length) {
+      <tz-empty
+        icon="production"
+        [title]="productions().length ? 'Eşleşen kayıt yok' : 'Henüz üretim yapılmadı'"
+        text="Üretim kaydı açtığınızda reçetedeki bileşenler stoktan düşülür."
+      >
+        @if (!productions().length) {
+          <button type="button" class="tz-btn tz-btn--primary" (click)="open()">
+            <tz-icon name="plus" />
+            Üretim yap
+          </button>
+        }
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Ürün</th>
+              <th>Depo</th>
+              <th class="num">Miktar</th>
+              <th class="num">Tarih</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (production of filtered(); track production.id) {
+              <tr>
+                <td class="tz-table__primary">{{ production.product?.name }}</td>
+                <td>{{ production.depot?.name }}</td>
+                <td class="num">{{ production.quantity | qty }}</td>
+                <td class="num">{{ production.createdAt | trDate: true }}</td>
+                <td class="actions">
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(production)"
+                    aria-label="Sil"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (draft(); as model) {
+  <tz-modal title="Üretim yap" slim (close)="close()">
+    <form #form="ngForm" id="productionForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-field">
+        <label for="prodProduct">Üretilecek ürün</label>
+        <select
+          id="prodProduct"
+          name="productId"
+          class="tz-select"
+          [(ngModel)]="model.productId"
+          required
+        >
+          <option value="">Seçin</option>
+          @for (product of producible(); track product.id) {
+            <option [value]="product.id">{{ product.name }}</option>
+          }
+        </select>
+        <div class="tz-hint">Yalnızca reçetesi tanımlı ürünler listelenir.</div>
+      </div>
+
+      <div class="tz-field">
+        <label for="prodDepot">Depo</label>
+        <select id="prodDepot" name="depotId" class="tz-select" [(ngModel)]="model.depotId" required>
+          <option value="">Seçin</option>
+          @for (depot of depots(); track depot.id) {
+            <option [value]="depot.id">{{ depot.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="tz-field">
+        <label for="prodQty">Miktar</label>
+        <input
+          id="prodQty"
+          name="quantity"
+          type="number"
+          min="0"
+          step="any"
+          class="tz-input"
+          [(ngModel)]="model.quantity"
+          required
+        />
+        <div class="tz-hint">
+          Bileşenlerden yeterli stok yoksa işlem reddedilir ve eksik miktar bildirilir.
+        </div>
+      </div>
+    </form>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="productionForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="production" />
+        Üretimi başlat
+      </button>
+    </ng-container>
+  </tz-modal>
+}

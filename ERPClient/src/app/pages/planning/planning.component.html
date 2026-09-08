@@ -1,0 +1,88 @@
+<tz-page
+  eyebrow="İş Akışı"
+  [heading]="plan()?.title || 'İhtiyaç planlama'"
+  description="Siparişi karşılamak için stokta bulunmayan bileşenler."
+>
+  <ng-container pageTools>
+    <a class="tz-btn" routerLink="/siparisler">
+      <tz-icon name="chevron" style="transform: rotate(90deg)" />
+      Siparişler
+    </a>
+    @if (plan()?.products?.length) {
+      <button type="button" class="tz-btn" (click)="print()">
+        <tz-icon name="external" />
+        Yazdır
+      </button>
+    }
+  </ng-container>
+
+  @if (loading()) {
+    <tz-panel>
+      <div class="tz-loading"><span class="tz-spinner"></span> Plan çalışıyor</div>
+    </tz-panel>
+  } @else if (!plan()) {
+    <tz-panel>
+      <tz-empty
+        icon="alert"
+        title="Plan çalıştırılamadı"
+        text="Sipariş bulunamadı ya da silinmiş olabilir."
+      />
+    </tz-panel>
+  } @else if (!plan()!.products.length) {
+    <tz-panel>
+      <tz-empty
+        icon="check-circle"
+        title="Eksik bileşen yok"
+        text="Siparişteki kalemler mevcut stokla karşılanabiliyor. Doğrudan üretime geçebilirsiniz."
+      >
+        <a class="tz-btn tz-btn--primary" routerLink="/uretim">
+          <tz-icon name="production" />
+          Üretime git
+        </a>
+      </tz-empty>
+    </tz-panel>
+  } @else {
+    <div class="tz-grid tz-grid--4 tz-mb">
+      <div class="tz-stat tz-stat--warn">
+        <div class="tz-stat__label"><tz-icon name="alert" /> Eksik kalem</div>
+        <div class="tz-stat__value">{{ plan()!.products.length }}</div>
+        <div class="tz-stat__foot">Tedarik veya üretim gerektiriyor</div>
+      </div>
+      <div class="tz-stat tz-stat--info">
+        <div class="tz-stat__label"><tz-icon name="calendar" /> Plan tarihi</div>
+        <div class="tz-stat__value" style="font-size: 19px">{{ plan()!.date | trDate }}</div>
+        <div class="tz-stat__foot">Hesaplandığı an</div>
+      </div>
+    </div>
+
+    <tz-panel
+      flush
+      heading="Tedarik edilecek bileşenler"
+      sub="Reçeteler patlatıldıktan sonra stoktan düşülen net ihtiyaç."
+    >
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Bileşen</th>
+              <th class="num">Eksik miktar</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of plan()!.products; track product.id) {
+              <tr>
+                <td class="tz-table__primary">{{ product.name }}</td>
+                <td class="num tz-warn">{{ product.quantity | qty }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </tz-panel>
+
+    <p class="tz-muted tz-small tz-mt">
+      Eksik kalemler alış faturasıyla stoğa alındıktan sonra üretim kaydı
+      oluşturulabilir.
+    </p>
+  }
+</tz-page>

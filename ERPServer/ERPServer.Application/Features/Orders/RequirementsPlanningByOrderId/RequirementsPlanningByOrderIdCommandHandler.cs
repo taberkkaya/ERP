@@ -1,4 +1,4 @@
-﻿using ERPServer.Domain.Dtos;
+using ERPServer.Domain.Dtos;
 using ERPServer.Domain.Entities;
 using ERPServer.Domain.Enums;
 using ERPServer.Domain.Repository;
@@ -9,6 +9,11 @@ using TS.Result;
 
 namespace ERPServer.Application.Features.Orders.RequirementsPlanningByOrderId;
 
+/// <summary>
+/// Siparişi karşılamak için eksik olan bileşenleri çıkarır:
+/// stoğu yetmeyen kalemler üretilecek miktar kadar reçeteleriyle patlatılır,
+/// bileşenlerin brüt ihtiyacı toplanır ve en sonda bir kez stoktan düşülür.
+/// </summary>
 internal sealed class RequirementsPlanningByOrderIdCommandHandler(
     IOrderRepository orderRepository,
     IStockMovementRepository stockMovementRepository,
@@ -16,7 +21,9 @@ internal sealed class RequirementsPlanningByOrderIdCommandHandler(
     IUnitOfWork unitOfWork
     ) : IRequestHandler<RequirementsPlanningByOrderIdCommand, Result<RequirementsPlanningByOrderIdCommandResponse>>
 {
-    public async Task<Result<RequirementsPlanningByOrderIdCommandResponse>> Handle(RequirementsPlanningByOrderIdCommand request, CancellationToken cancellationToken)
+    public async Task<Result<RequirementsPlanningByOrderIdCommandResponse>> Handle(
+        RequirementsPlanningByOrderIdCommand request,
+        CancellationToken cancellationToken)
     {
         Order? order = await orderRepository
             .Where(p => p.Id == request.OrderId)
@@ -27,78 +34,58 @@ internal sealed class RequirementsPlanningByOrderIdCommandHandler(
         if (order is null)
             return Result<RequirementsPlanningByOrderIdCommandResponse>.Failure("Sipariş bulunamadı!");
 
-        List<ProductDto> productsToBeProduced = new();
+        // Bileşen kimliği -> (ad, brüt ihtiyaç). Aynı bileşen birden çok reçetede
+        // geçebiliyor; ihtiyaçlar önce toplanıp stok bir kez düşülüyor, aksi hâlde
+        // her reçete aynı stoğu yeniden sayıp eksiği olduğundan büyük gösteriyordu.
+        Dictionary<Guid, ProductDto> requirements = new();
 
-        List<ProductDto> requirementPlanningProducts = new();
-
-        if (order.Details is not null)
+        foreach (OrderDetail item in order.Details ?? [])
         {
-            foreach (var item in order.Details)
+            decimal stock = await StockOfAsync(item.ProductId, cancellationToken);
+
+            if (stock >= item.Quantity) continue;
+
+            decimal toBeProduced = item.Quantity - stock;
+
+            Recipe? recipe = await recipeRepository
+                .Where(p => p.ProductId == item.ProductId)
+                .Include(p => p.Details!)
+                .ThenInclude(p => p.Product)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (recipe?.Details is null) continue;
+
+            foreach (RecipeDetail detail in recipe.Details)
             {
-                var product = item.Product;
-                List<StockMovement> movements = await stockMovementRepository
-                    .Where(p => p.ProductId == product!.Id)
-                    .ToListAsync(cancellationToken);
+                // Reçete bir birim için yazılır; üretilecek adetle ölçekleniyor.
+                decimal required = detail.Quantity * toBeProduced;
 
-                decimal stock = movements.Sum(p => p.NumberOfEntries) - movements.Sum(p => p.NumberOfOutputs);
-
-                if (stock < item.Quantity)
+                if (requirements.TryGetValue(detail.ProductId, out ProductDto? existing))
                 {
-                    ProductDto productToBeProduced = new()
-                    {
-                        Id = item.ProductId,
-                        Name = product!.Name,
-                        Quantity = item.Quantity - stock
-                    };
-
-                    productsToBeProduced.Add(productToBeProduced);
+                    existing.Quantity += required;
+                    continue;
                 }
-            }
 
-            foreach (var item in productsToBeProduced)
-            {
-                Recipe? recipe =
-                    await recipeRepository
-                    .Where(p => p.ProductId == item.Id)
-                    .Include(p => p.Details!)
-                    .ThenInclude(p => p.Product)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                if (recipe is not null && recipe.Details is not null)
+                requirements.Add(detail.ProductId, new ProductDto
                 {
-                    foreach (var detail in recipe.Details)
-                    {
-                        List<StockMovement> urunMovements =
-                            await stockMovementRepository
-                            .Where(p => p.ProductId == detail!.ProductId)
-                            .ToListAsync(cancellationToken);
-
-                        decimal stock = urunMovements.Sum(p => p.NumberOfEntries) - urunMovements.Sum(p => p.NumberOfOutputs);
-
-                        if (stock < detail.Quantity)
-                        {
-                            ProductDto ihtiyacOlanUrun = new()
-                            {
-                                Id = detail.ProductId,
-                                Name = detail.Product!.Name,
-                                Quantity = detail.Quantity - stock
-                            };
-
-                            requirementPlanningProducts.Add(ihtiyacOlanUrun);
-                        }
-                    }
-                }
+                    Id = detail.ProductId,
+                    Name = detail.Product!.Name,
+                    Quantity = required
+                });
             }
         }
 
-        requirementPlanningProducts = requirementPlanningProducts
-            .GroupBy(p => p.Id)
-            .Select(g => new ProductDto
-            {
-                Id = g.Key,
-                Name = g.First().Name,
-                Quantity = g.Sum(item => item.Quantity),
-            }).ToList();
+        List<ProductDto> missing = new();
+
+        foreach (ProductDto requirement in requirements.Values)
+        {
+            decimal stock = await StockOfAsync(requirement.Id, cancellationToken);
+
+            if (requirement.Quantity <= stock) continue;
+
+            requirement.Quantity -= stock;
+            missing.Add(requirement);
+        }
 
         order.Status = OrderStatusEnum.RequirementsPlanWorked;
 
@@ -106,7 +93,13 @@ internal sealed class RequirementsPlanningByOrderIdCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new RequirementsPlanningByOrderIdCommandResponse(
-            DateOnly.FromDateTime(DateTime.Now), order.Number + " No'lu Siparişin İhtiyaç Planlaması", requirementPlanningProducts
-            );
+            DateOnly.FromDateTime(DateTime.Now),
+            order.Number + " No'lu Siparişin İhtiyaç Planlaması",
+            [.. missing.OrderBy(p => p.Name)]);
     }
+
+    private async Task<decimal> StockOfAsync(Guid productId, CancellationToken cancellationToken) =>
+        await stockMovementRepository
+            .Where(p => p.ProductId == productId)
+            .SumAsync(s => s.NumberOfEntries - s.NumberOfOutputs, cancellationToken);
 }

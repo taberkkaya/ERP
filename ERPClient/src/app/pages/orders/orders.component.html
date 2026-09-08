@@ -1,0 +1,268 @@
+<tz-page
+  eyebrow="İş Akışı"
+  heading="Siparişler"
+  description="Müşteri siparişleri; ihtiyaç planlaması ve üretim buradan tetiklenir."
+>
+  <ng-container pageTools>
+    <div class="tz-tabs">
+      @for (status of statuses; track status.value) {
+        <button
+          type="button"
+          class="tz-tab"
+          [class.active]="statusFilter() === status.value"
+          (click)="statusFilter.set(status.value)"
+        >
+          {{ status.label }}
+        </button>
+      }
+    </div>
+
+    <tz-search [value]="search()" (valueChange)="search.set($event)" placeholder="Belge no, müşteri" />
+    <button
+      type="button"
+      class="tz-btn tz-btn--primary"
+      (click)="openCreate()"
+      [disabled]="!customers().length || !products().length"
+    >
+      <tz-icon name="plus" />
+      Yeni sipariş
+    </button>
+  </ng-container>
+
+  <tz-panel
+    flush
+    heading="Sipariş listesi"
+    [sub]="orders().length + ' kayıt' + (pendingCount() ? ' · ' + pendingCount() + ' tanesi bekliyor' : '')"
+  >
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!filtered().length) {
+      <tz-empty
+        icon="orders"
+        [title]="orders().length ? 'Eşleşen sipariş yok' : 'Henüz sipariş yok'"
+        [text]="
+          orders().length
+            ? 'Filtreyi veya arama terimini değiştirin.'
+            : 'Sipariş açmak için önce müşteri ve ürün tanımlayın.'
+        "
+      >
+        @if (!orders().length && customers().length && products().length) {
+          <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+            <tz-icon name="plus" />
+            Yeni sipariş
+          </button>
+        }
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Belge</th>
+              <th>Müşteri</th>
+              <th>Tarih</th>
+              <th>Teslim</th>
+              <th class="num">Kalem</th>
+              <th class="num">Tutar</th>
+              <th>Durum</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of filtered(); track order.id) {
+              <tr>
+                <td class="num tz-table__primary">{{ order.number }}</td>
+                <td>{{ order.customer?.name }}</td>
+                <td class="num">{{ order.date | trDate }}</td>
+                <td class="num">{{ order.deliveryDate | trDate }}</td>
+                <td class="num">{{ order.details?.length || 0 }}</td>
+                <td class="num">{{ total(order) | money }} ₺</td>
+                <td>
+                  <span class="tz-badge" [class]="'tz-badge ' + statusClass(order.status?.value)">
+                    {{ order.status?.name }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <a
+                    class="tz-btn tz-btn--sm"
+                    [routerLink]="['/siparisler', order.id, 'ihtiyac-plani']"
+                  >
+                    <tz-icon name="planning" />
+                    İhtiyaç planı
+                  </a>
+                  <button type="button" class="tz-rowbtn" (click)="openEdit(order)" aria-label="Düzenle">
+                    <tz-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(order)"
+                    aria-label="Sil"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (editing(); as model) {
+  <tz-modal [title]="isNew() ? 'Yeni sipariş' : 'Siparişi düzenle'" wide (close)="close()">
+    <form #form="ngForm" id="orderForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-field">
+        <label for="orderCustomer">Müşteri</label>
+        <select
+          id="orderCustomer"
+          name="customerId"
+          class="tz-select"
+          [(ngModel)]="model.customerId"
+          required
+        >
+          <option value="">Müşteri seçin</option>
+          @for (customer of customers(); track customer.id) {
+            <option [value]="customer.id">{{ customer.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="tz-cols">
+        <div class="tz-field">
+          <label for="orderDate">Sipariş tarihi</label>
+          <input
+            id="orderDate"
+            name="date"
+            type="date"
+            class="tz-input"
+            [(ngModel)]="model.date"
+            required
+          />
+        </div>
+        <div class="tz-field">
+          <label for="orderDelivery">Teslim tarihi</label>
+          <input
+            id="orderDelivery"
+            name="deliveryDate"
+            type="date"
+            class="tz-input"
+            [(ngModel)]="model.deliveryDate"
+            required
+          />
+        </div>
+      </div>
+    </form>
+
+    <div class="tz-label">Kalemler</div>
+    <div class="tz-lines">
+      <div class="tz-lines__form" style="grid-template-columns: 1fr 120px 130px auto">
+        <div class="tz-field">
+          <label for="orderLineProduct">Ürün</label>
+          <select
+            id="orderLineProduct"
+            class="tz-select"
+            [ngModel]="lineProductId()"
+            (ngModelChange)="lineProductId.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option value="">Seçin</option>
+            @for (product of products(); track product.id) {
+              <option [value]="product.id">{{ product.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="tz-field">
+          <label for="orderLineQty">Miktar</label>
+          <input
+            id="orderLineQty"
+            type="number"
+            min="0"
+            step="any"
+            class="tz-input"
+            [ngModel]="lineQuantity()"
+            (ngModelChange)="lineQuantity.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        </div>
+
+        <div class="tz-field">
+          <label for="orderLinePrice">Birim fiyat</label>
+          <input
+            id="orderLinePrice"
+            type="number"
+            min="0"
+            step="any"
+            class="tz-input"
+            [ngModel]="linePrice()"
+            (ngModelChange)="linePrice.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        </div>
+
+        <div class="tz-lines__add">
+          <button type="button" class="tz-btn" (click)="addLine()">
+            <tz-icon name="plus" />
+            Ekle
+          </button>
+        </div>
+      </div>
+
+      @if (model.details.length) {
+        <div class="tz-tablewrap">
+          <table class="tz-table">
+            <thead>
+              <tr>
+                <th>Ürün</th>
+                <th class="num">Miktar</th>
+                <th class="num">Birim fiyat</th>
+                <th class="num">Tutar</th>
+                <th class="actions"><span class="tz-sr">İşlemler</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of model.details; track $index; let i = $index) {
+                <tr>
+                  <td>{{ line.product?.name }}</td>
+                  <td class="num">{{ line.quantity | qty }}</td>
+                  <td class="num">{{ line.price | money }} ₺</td>
+                  <td class="num">{{ line.quantity * line.price | money }} ₺</td>
+                  <td class="actions">
+                    <button
+                      type="button"
+                      class="tz-rowbtn tz-rowbtn--danger"
+                      (click)="removeLine(i)"
+                      aria-label="Satırı kaldır"
+                    >
+                      <tz-icon name="close" />
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3">Toplam</td>
+                <td class="num">{{ total(model) | money }} ₺</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      } @else {
+        <div class="tz-loading">Henüz kalem eklenmedi.</div>
+      }
+    </div>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="orderForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="check" />
+        Siparişi kaydet
+      </button>
+    </ng-container>
+  </tz-modal>
+}

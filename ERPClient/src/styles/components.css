@@ -1,0 +1,624 @@
+/* ============================================================================
+   Tezgah — bileşen katmanı: düğme, panel, tablo, rozet, kip, bildirim.
+   ========================================================================= */
+
+/* --- düğmeler ------------------------------------------------------------- */
+
+.tz-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius-sm);
+  background: var(--tz-surface-2);
+  color: var(--tz-ink);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 550;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--tz-fast), border-color var(--tz-fast),
+    color var(--tz-fast), transform var(--tz-fast);
+}
+
+.tz-btn:hover {
+  border-color: var(--tz-line-strong);
+  background: var(--tz-surface-3);
+}
+
+.tz-btn:active { transform: translateY(1px); }
+
+.tz-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tz-btn tz-icon { width: 15px; height: 15px; }
+
+.tz-btn--primary {
+  border-color: var(--tz-accent);
+  background: var(--tz-accent);
+  color: var(--tz-accent-ink);
+}
+
+.tz-btn--primary:hover {
+  border-color: var(--tz-accent-hi);
+  background: var(--tz-accent-hi);
+}
+
+.tz-btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--tz-ink-2);
+}
+
+.tz-btn--ghost:hover {
+  border-color: var(--tz-line);
+  background: var(--tz-surface-2);
+  color: var(--tz-ink);
+}
+
+.tz-btn--danger {
+  border-color: transparent;
+  background: var(--tz-danger-soft);
+  color: var(--tz-danger);
+}
+
+.tz-btn--danger:hover {
+  border-color: var(--tz-danger);
+  background: var(--tz-danger-soft);
+}
+
+.tz-btn--sm {
+  padding: 5px 10px;
+  font-size: 12.5px;
+}
+
+.tz-btn--sm tz-icon { width: 13px; height: 13px; }
+
+.tz-btn--block { width: 100%; }
+
+/* Satır sonundaki eylem düğmeleri: yalnızca ikon, satırın üstüne gelince belirir. */
+.tz-rowbtn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tz-muted);
+  cursor: pointer;
+  transition: background var(--tz-fast), color var(--tz-fast), border-color var(--tz-fast);
+}
+
+.tz-rowbtn:hover {
+  border-color: var(--tz-line);
+  background: var(--tz-surface-2);
+  color: var(--tz-ink);
+}
+
+.tz-rowbtn--danger:hover {
+  border-color: transparent;
+  background: var(--tz-danger-soft);
+  color: var(--tz-danger);
+}
+
+.tz-rowbtn tz-icon { width: 15px; height: 15px; }
+
+/* --- panel ---------------------------------------------------------------- */
+
+.tz-panel {
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius);
+  background: var(--tz-surface);
+  box-shadow: var(--tz-shadow-sm);
+  overflow: hidden;
+}
+
+.tz-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--tz-line-soft);
+}
+
+.tz-panel__title {
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.tz-panel__sub {
+  color: var(--tz-muted);
+  font-size: 12px;
+}
+
+.tz-panel__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.tz-panel__body { padding: 16px; }
+
+.tz-panel__body--flush { padding: 0; }
+
+/* --- ölçüm kartı ---------------------------------------------------------- */
+
+.tz-stat {
+  position: relative;
+  padding: 15px 16px;
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius);
+  background: var(--tz-surface);
+  overflow: hidden;
+}
+
+/* Üst kenardaki ince renk şeridi kartı bir ölçüm aleti gibi okutuyor. */
+.tz-stat::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--tz-accent);
+  opacity: 0.75;
+}
+
+.tz-stat--ok::before { background: var(--tz-ok); }
+.tz-stat--warn::before { background: var(--tz-warn); }
+.tz-stat--danger::before { background: var(--tz-danger); }
+.tz-stat--info::before { background: var(--tz-info); }
+
+.tz-stat__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--tz-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tz-stat__label tz-icon { width: 14px; height: 14px; }
+
+.tz-stat__value {
+  margin-top: 8px;
+  font-family: var(--tz-font-mono);
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.tz-stat__value small {
+  margin-left: 3px;
+  color: var(--tz-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tz-stat__foot {
+  margin-top: 5px;
+  color: var(--tz-muted);
+  font-size: 12px;
+}
+
+/* --- tablo ---------------------------------------------------------------- */
+
+.tz-tablewrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tz-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.tz-table thead th {
+  position: sticky;
+  top: 0;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--tz-line);
+  background: var(--tz-surface-2);
+  color: var(--tz-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tz-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--tz-line-soft);
+  vertical-align: middle;
+}
+
+.tz-table tbody tr:last-child td { border-bottom: 0; }
+
+.tz-table tbody tr {
+  transition: background var(--tz-fast);
+}
+
+.tz-table tbody tr:hover { background: var(--tz-surface-2); }
+
+.tz-table tfoot td {
+  padding: 10px 14px;
+  border-top: 1px solid var(--tz-line);
+  background: var(--tz-surface-2);
+  font-weight: 600;
+}
+
+.tz-table .num {
+  font-family: var(--tz-font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tz-table .actions {
+  width: 1%;
+  padding-right: 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tz-table .actions > * + * { margin-left: 2px; }
+
+.tz-table__primary {
+  font-weight: 550;
+}
+
+.tz-table__meta {
+  color: var(--tz-muted);
+  font-size: 12px;
+}
+
+/* --- rozet ---------------------------------------------------------------- */
+
+.tz-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 7px;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+/* Öndeki nokta rengi taşıyor; rozetin kendisi sakin kalıyor. */
+.tz-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tz-badge--neutral { border-color: var(--tz-line); background: var(--tz-surface-2); color: var(--tz-ink-2); }
+.tz-badge--ok { border-color: transparent; background: var(--tz-ok-soft); color: var(--tz-ok); }
+.tz-badge--warn { border-color: transparent; background: var(--tz-warn-soft); color: var(--tz-warn); }
+.tz-badge--danger { border-color: transparent; background: var(--tz-danger-soft); color: var(--tz-danger); }
+.tz-badge--info { border-color: transparent; background: var(--tz-info-soft); color: var(--tz-info); }
+.tz-badge--accent { border-color: transparent; background: var(--tz-accent-soft); color: var(--tz-accent); }
+
+/* --- arama kutusu --------------------------------------------------------- */
+
+.tz-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 210px;
+}
+
+.tz-search tz-icon {
+  position: absolute;
+  left: 10px;
+  width: 15px;
+  height: 15px;
+  color: var(--tz-muted);
+  pointer-events: none;
+}
+
+.tz-search input {
+  width: 100%;
+  padding: 8px 11px 8px 32px;
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius-sm);
+  background: var(--tz-surface-2);
+  color: var(--tz-ink);
+  font-family: inherit;
+  font-size: 13.5px;
+}
+
+.tz-search input::placeholder { color: var(--tz-muted); }
+
+.tz-search input:focus {
+  outline: 0;
+  border-color: var(--tz-accent);
+  box-shadow: 0 0 0 3px var(--tz-accent-ring);
+}
+
+/* --- boş durum ------------------------------------------------------------ */
+
+.tz-empty {
+  display: grid;
+  place-items: center;
+  padding: 52px 20px;
+  text-align: center;
+}
+
+.tz-empty__mark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 12px;
+  border: 1px solid var(--tz-line);
+  border-radius: 12px;
+  background: var(--tz-surface-2);
+  color: var(--tz-muted);
+}
+
+.tz-empty__mark tz-icon { width: 20px; height: 20px; }
+
+.tz-empty__title {
+  color: var(--tz-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tz-empty__text {
+  max-width: 380px;
+  margin-top: 4px;
+  color: var(--tz-muted);
+  font-size: 13px;
+}
+
+.tz-empty__action { margin-top: 14px; }
+
+/* --- yükleniyor ----------------------------------------------------------- */
+
+.tz-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--tz-line-strong);
+  border-top-color: var(--tz-accent);
+  border-radius: 50%;
+  animation: tz-spin 620ms linear infinite;
+}
+
+@keyframes tz-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tz-spinner { animation-duration: 2s; }
+}
+
+.tz-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 44px 20px;
+  color: var(--tz-muted);
+  font-size: 13px;
+}
+
+/* --- kip (modal) ---------------------------------------------------------- */
+
+.tz-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  background: var(--tz-overlay);
+  overflow-y: auto;
+  animation: tz-fade 140ms var(--tz-ease);
+}
+
+.tz-modal__box {
+  width: 100%;
+  max-width: 560px;
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius-lg);
+  background: var(--tz-surface);
+  box-shadow: var(--tz-shadow-lg);
+  animation: tz-rise 200ms var(--tz-ease);
+}
+
+.tz-modal__box--wide { max-width: 900px; }
+.tz-modal__box--slim { max-width: 420px; }
+
+.tz-modal__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--tz-line-soft);
+}
+
+.tz-modal__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tz-modal__body {
+  padding: 18px;
+  max-height: min(66vh, 640px);
+  overflow-y: auto;
+}
+
+.tz-modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--tz-line-soft);
+  background: var(--tz-surface-2);
+}
+
+@keyframes tz-fade {
+  from { opacity: 0; }
+}
+
+@keyframes tz-rise {
+  from { opacity: 0; transform: translateY(-8px) scale(0.985); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tz-modal,
+  .tz-modal__box { animation: none; }
+}
+
+/* --- bildirim ------------------------------------------------------------- */
+
+.tz-toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(360px, calc(100vw - 32px));
+}
+
+.tz-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 13px;
+  border: 1px solid var(--tz-line);
+  border-left: 3px solid var(--tz-accent);
+  border-radius: var(--tz-radius-sm);
+  background: var(--tz-surface-2);
+  box-shadow: var(--tz-shadow-lg);
+  animation: tz-slide 200ms var(--tz-ease);
+}
+
+.tz-toast--ok { border-left-color: var(--tz-ok); }
+.tz-toast--danger { border-left-color: var(--tz-danger); }
+.tz-toast--info { border-left-color: var(--tz-info); }
+.tz-toast--warn { border-left-color: var(--tz-warn); }
+
+.tz-toast__icon { flex: 0 0 auto; margin-top: 1px; }
+.tz-toast__icon tz-icon { width: 16px; height: 16px; }
+
+.tz-toast--ok .tz-toast__icon { color: var(--tz-ok); }
+.tz-toast--danger .tz-toast__icon { color: var(--tz-danger); }
+.tz-toast--info .tz-toast__icon { color: var(--tz-info); }
+.tz-toast--warn .tz-toast__icon { color: var(--tz-warn); }
+
+.tz-toast__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+@keyframes tz-slide {
+  from { opacity: 0; transform: translateX(14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tz-toast { animation: none; }
+}
+
+/* --- satır ekleyici ------------------------------------------------------- */
+
+/* Sipariş ve fatura kalemleri: üstte giriş satırı, altında eklenenlerin tablosu. */
+.tz-lines {
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius);
+  overflow: hidden;
+}
+
+.tz-lines__form {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: var(--tz-surface-2);
+  border-bottom: 1px solid var(--tz-line);
+}
+
+.tz-lines__form .tz-field { margin-bottom: 0; }
+
+.tz-lines__add {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* --- sekmeler ------------------------------------------------------------- */
+
+.tz-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius-sm);
+  background: var(--tz-surface-2);
+}
+
+.tz-tab {
+  padding: 6px 13px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--tz-ink-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background var(--tz-fast), color var(--tz-fast);
+}
+
+.tz-tab:hover { color: var(--tz-ink); }
+
+.tz-tab.active {
+  background: var(--tz-surface);
+  color: var(--tz-ink);
+  box-shadow: var(--tz-shadow-sm);
+}
+
+/* --- ilerleme çubuğu ------------------------------------------------------ */
+
+.tz-meter {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--tz-surface-3);
+  overflow: hidden;
+}
+
+.tz-meter__fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--tz-accent);
+  transition: width var(--tz-slow);
+}
+
+.tz-meter__fill--ok { background: var(--tz-ok); }
+.tz-meter__fill--warn { background: var(--tz-warn); }
+.tz-meter__fill--danger { background: var(--tz-danger); }

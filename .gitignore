@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Dagitim degiskenleri: gizli degerler depoya girmez.
+.env
+.env.local
+
+# Claude Code yerel calisma yapilandirmasi
+.claude/

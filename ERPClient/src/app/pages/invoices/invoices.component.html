@@ -1,0 +1,271 @@
+<tz-page eyebrow="Faturalar" [heading]="heading()" [description]="description()">
+  <ng-container pageTools>
+    <tz-search [value]="search()" (valueChange)="search.set($event)" placeholder="Fatura no, müşteri" />
+    <button
+      type="button"
+      class="tz-btn tz-btn--primary"
+      (click)="openCreate()"
+      [disabled]="!customers().length || !products().length || !depots().length"
+    >
+      <tz-icon name="plus" />
+      Yeni fatura
+    </button>
+  </ng-container>
+
+  <div class="tz-grid tz-grid--4 tz-mb">
+    <div class="tz-stat" [class.tz-stat--ok]="!isPurchase()">
+      <div class="tz-stat__label"><tz-icon [name]="icon()" /> Fatura sayısı</div>
+      <div class="tz-stat__value">{{ invoices().length }}</div>
+      <div class="tz-stat__foot">{{ isPurchase() ? 'Stok girişi' : 'Stok çıkışı' }}</div>
+    </div>
+    <div class="tz-stat" [class.tz-stat--ok]="!isPurchase()">
+      <div class="tz-stat__label"><tz-icon name="spark" /> Toplam tutar</div>
+      <div class="tz-stat__value">{{ grandTotal() | money }}<small>₺</small></div>
+      <div class="tz-stat__foot">Tüm kalemlerin toplamı</div>
+    </div>
+  </div>
+
+  <tz-panel flush>
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!filtered().length) {
+      <tz-empty
+        [icon]="icon()"
+        [title]="invoices().length ? 'Eşleşen fatura yok' : 'Henüz fatura yok'"
+        [text]="
+          invoices().length
+            ? 'Arama terimini değiştirip yeniden deneyin.'
+            : 'Fatura kesmek için müşteri, ürün ve depo tanımlı olmalı.'
+        "
+      >
+        @if (!invoices().length && customers().length && products().length && depots().length) {
+          <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+            <tz-icon name="plus" />
+            Yeni fatura
+          </button>
+        }
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Fatura no</th>
+              <th>Müşteri</th>
+              <th>Tarih</th>
+              <th class="num">Kalem</th>
+              <th class="num">Tutar</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (invoice of filtered(); track invoice.id) {
+              <tr>
+                <td class="num tz-table__primary">{{ invoice.invoiceNumber }}</td>
+                <td>{{ invoice.customer?.name }}</td>
+                <td class="num">{{ invoice.date | trDate }}</td>
+                <td class="num">{{ invoice.details?.length || 0 }}</td>
+                <td class="num">{{ total(invoice) | money }} ₺</td>
+                <td class="actions">
+                  <button type="button" class="tz-rowbtn" (click)="openEdit(invoice)" aria-label="Düzenle">
+                    <tz-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(invoice)"
+                    aria-label="Sil"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (editing(); as model) {
+  <tz-modal
+    [title]="(isNew() ? 'Yeni ' : '') + (isPurchase() ? 'alış faturası' : 'satış faturası')"
+    wide
+    (close)="close()"
+  >
+    <form #form="ngForm" id="invoiceForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-cols">
+        <div class="tz-field">
+          <label for="invoiceCustomer">Müşteri</label>
+          <select
+            id="invoiceCustomer"
+            name="customerId"
+            class="tz-select"
+            [(ngModel)]="model.customerId"
+            [disabled]="!isNew()"
+            required
+          >
+            <option value="">Müşteri seçin</option>
+            @for (customer of customers(); track customer.id) {
+              <option [value]="customer.id">{{ customer.name }}</option>
+            }
+          </select>
+          @if (!isNew()) {
+            <div class="tz-hint">Kesilmiş bir faturanın carisi değiştirilemez.</div>
+          }
+        </div>
+
+        <div class="tz-field">
+          <label for="invoiceNumber">Fatura numarası</label>
+          <input
+            id="invoiceNumber"
+            name="invoiceNumber"
+            class="tz-input"
+            [(ngModel)]="model.invoiceNumber"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="tz-field">
+        <label for="invoiceDate">Fatura tarihi</label>
+        <input
+          id="invoiceDate"
+          name="date"
+          type="date"
+          class="tz-input"
+          [(ngModel)]="model.date"
+          required
+        />
+      </div>
+    </form>
+
+    <div class="tz-label">Kalemler</div>
+    <div class="tz-lines">
+      <div class="tz-lines__form" style="grid-template-columns: 1fr 1fr 110px 120px auto">
+        <div class="tz-field">
+          <label for="invLineProduct">Ürün</label>
+          <select
+            id="invLineProduct"
+            class="tz-select"
+            [ngModel]="lineProductId()"
+            (ngModelChange)="lineProductId.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option value="">Seçin</option>
+            @for (product of products(); track product.id) {
+              <option [value]="product.id">{{ product.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="tz-field">
+          <label for="invLineDepot">Depo</label>
+          <select
+            id="invLineDepot"
+            class="tz-select"
+            [ngModel]="lineDepotId()"
+            (ngModelChange)="lineDepotId.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option value="">Seçin</option>
+            @for (depot of depots(); track depot.id) {
+              <option [value]="depot.id">{{ depot.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="tz-field">
+          <label for="invLineQty">Miktar</label>
+          <input
+            id="invLineQty"
+            type="number"
+            min="0"
+            step="any"
+            class="tz-input"
+            [ngModel]="lineQuantity()"
+            (ngModelChange)="lineQuantity.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        </div>
+
+        <div class="tz-field">
+          <label for="invLinePrice">Birim fiyat</label>
+          <input
+            id="invLinePrice"
+            type="number"
+            min="0"
+            step="any"
+            class="tz-input"
+            [ngModel]="linePrice()"
+            (ngModelChange)="linePrice.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        </div>
+
+        <div class="tz-lines__add">
+          <button type="button" class="tz-btn" (click)="addLine()">
+            <tz-icon name="plus" />
+            Ekle
+          </button>
+        </div>
+      </div>
+
+      @if (model.details.length) {
+        <div class="tz-tablewrap">
+          <table class="tz-table">
+            <thead>
+              <tr>
+                <th>Ürün</th>
+                <th>Depo</th>
+                <th class="num">Miktar</th>
+                <th class="num">Birim fiyat</th>
+                <th class="num">Tutar</th>
+                <th class="actions"><span class="tz-sr">İşlemler</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of model.details; track $index; let i = $index) {
+                <tr>
+                  <td>{{ line.product?.name }}</td>
+                  <td>{{ line.depot?.name }}</td>
+                  <td class="num">{{ line.quantity | qty }}</td>
+                  <td class="num">{{ line.price | money }} ₺</td>
+                  <td class="num">{{ line.quantity * line.price | money }} ₺</td>
+                  <td class="actions">
+                    <button
+                      type="button"
+                      class="tz-rowbtn tz-rowbtn--danger"
+                      (click)="removeLine(i)"
+                      aria-label="Satırı kaldır"
+                    >
+                      <tz-icon name="close" />
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4">Toplam</td>
+                <td class="num">{{ total(model) | money }} ₺</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      } @else {
+        <div class="tz-loading">Henüz kalem eklenmedi.</div>
+      }
+    </div>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="invoiceForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="check" />
+        Faturayı kaydet
+      </button>
+    </ng-container>
+  </tz-modal>
+}

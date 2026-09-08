@@ -1,0 +1,313 @@
+/* ============================================================================
+   Tezgah — demo yüzeyleri: giriş ekranı, demo şeridi ve oturum sonu penceresi.
+
+   Giriş ekranı uygulamanın vitrini; kabuğun sakin diline karşılık burada
+   kehribar ve teknik ızgara dokusu öne çıkıyor.
+   ========================================================================= */
+
+/* --- giriş ekranı --------------------------------------------------------- */
+
+.tz-gate {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 100vh;
+  background: var(--tz-canvas);
+}
+
+.tz-gate__pitch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 56px clamp(32px, 5vw, 76px);
+  border-right: 1px solid var(--tz-line);
+  background: var(--tz-surface);
+  overflow: hidden;
+}
+
+/* Teknik çizim ızgarası: üretim planlama yazılımı olduğunu söyleyen doku. */
+.tz-gate__pitch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--tz-line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tz-line-soft) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(ellipse 80% 70% at 30% 40%, #000 20%, transparent 78%);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.tz-gate__inner {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+}
+
+.tz-gate__brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 34px;
+}
+
+.tz-gate__brand tz-icon { width: 34px; height: 34px; color: var(--tz-accent); }
+
+.tz-gate__brandword {
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.tz-gate__brandword small {
+  display: block;
+  color: var(--tz-muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tz-gate__title {
+  font-size: clamp(27px, 3.4vw, 38px);
+  font-weight: 650;
+  letter-spacing: -0.028em;
+  line-height: 1.14;
+}
+
+.tz-gate__title em {
+  color: var(--tz-accent);
+  font-style: normal;
+}
+
+.tz-gate__text {
+  margin-top: 14px;
+  max-width: 46ch;
+  color: var(--tz-ink-2);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+
+.tz-gate__flow {
+  display: grid;
+  gap: 1px;
+  margin-top: 30px;
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius);
+  background: var(--tz-line-soft);
+  overflow: hidden;
+}
+
+.tz-gate__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 15px;
+  background: var(--tz-surface);
+}
+
+.tz-gate__stepno {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--tz-accent-soft);
+  color: var(--tz-accent);
+  font-family: var(--tz-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tz-gate__stepname {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.tz-gate__steptext {
+  display: block;
+  color: var(--tz-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* --- giriş formu ---------------------------------------------------------- */
+
+.tz-gate__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.tz-gate__card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.tz-gate__cardhead { margin-bottom: 22px; }
+
+.tz-gate__cardtitle {
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.tz-gate__cardtext {
+  margin-top: 4px;
+  color: var(--tz-muted);
+  font-size: 13px;
+}
+
+.tz-gate__sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--tz-muted);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tz-gate__sep::before,
+.tz-gate__sep::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--tz-line);
+}
+
+.tz-gate__note {
+  margin-top: 18px;
+  padding: 11px 13px;
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius-sm);
+  background: var(--tz-surface-2);
+  color: var(--tz-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.tz-gate__note code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--tz-surface-3);
+  color: var(--tz-ink-2);
+  font-family: var(--tz-font-mono);
+  font-size: 12px;
+}
+
+.tz-gate__error {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--tz-radius-sm);
+  background: var(--tz-danger-soft);
+  color: var(--tz-danger);
+  font-size: 13px;
+}
+
+@media (max-width: 940px) {
+  .tz-gate { grid-template-columns: minmax(0, 1fr); }
+
+  /* Dar ekranda vitrin formu aşağı itiyor; yalnızca form kalıyor. */
+  .tz-gate__pitch { display: none; }
+}
+
+/* --- demo şeridi ---------------------------------------------------------- */
+
+.tz-demobar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 20px;
+  border-bottom: 1px solid var(--tz-line);
+  background: var(--tz-accent-soft);
+  color: var(--tz-ink);
+  font-size: 12.5px;
+}
+
+.tz-demobar__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: var(--tz-accent);
+  color: var(--tz-accent-ink);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.tz-demobar__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--tz-ink-2);
+  white-space: nowrap;
+}
+
+.tz-demobar__stat b {
+  font-family: var(--tz-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--tz-ink);
+}
+
+.tz-demobar__meter {
+  width: 92px;
+}
+
+.tz-demobar__tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+@media (max-width: 780px) {
+  /* Şerit dar ekranda tamamen sığmıyor; çalışma alanı adı ve kota çubuğu düşüyor,
+     kalanı da yatay kaydırılabiliyor. Sıfırla ve iletişim düğmeleri kesilmemeli. */
+  .tz-demobar {
+    padding: 7px 14px;
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .tz-demobar__stat--wide { display: none; }
+  .tz-demobar__meter { display: none; }
+  .tz-demobar__tag { flex: 0 0 auto; }
+  .tz-demobar__tools { flex: 0 0 auto; }
+}
+
+/* --- oturum penceresi ----------------------------------------------------- */
+
+.tz-demoprompt__mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: var(--tz-accent-soft);
+  color: var(--tz-accent);
+}
+
+.tz-demoprompt__mark tz-icon { width: 21px; height: 21px; }
+
+.tz-demoprompt__title {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.tz-demoprompt__text {
+  margin-top: 7px;
+  color: var(--tz-ink-2);
+  font-size: 13.5px;
+  line-height: 1.6;
+}

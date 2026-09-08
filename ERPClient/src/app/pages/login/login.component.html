@@ -1,0 +1,119 @@
+<div class="tz-gate">
+  <section class="tz-gate__pitch">
+    <div class="tz-gate__inner">
+      <div class="tz-gate__brand">
+        <tz-icon name="brand" [width]="1.9" />
+        <span class="tz-gate__brandword">
+          Tezgah
+          <small>Üretim Yönetimi</small>
+        </span>
+      </div>
+
+      <h1 class="tz-gate__title">
+        Siparişten sevkiyata,<br />
+        <em>tek bir akış.</em>
+      </h1>
+
+      <p class="tz-gate__text">
+        Reçete, stok, üretim ve fatura ayrı ayrı tutulan tablolar değil. Bir siparişin
+        neye ihtiyaç duyduğunu sistem kendisi çıkarır, üretim stoğu kendisi düşer.
+      </p>
+
+      <div class="tz-gate__flow">
+        @for (step of steps; track step.name; let i = $index) {
+          <div class="tz-gate__step">
+            <span class="tz-gate__stepno">{{ i + 1 }}</span>
+            <span>
+              <span class="tz-gate__stepname">{{ step.name }}</span>
+              <span class="tz-gate__steptext">{{ step.text }}</span>
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="tz-gate__panel">
+    <div class="tz-gate__card">
+      <div class="tz-gate__cardhead">
+        <div class="tz-gate__cardtitle">Uygulamaya girin</div>
+        <div class="tz-gate__cardtext">
+          Demo oturumu size örnek veriyle dolu, size özel bir çalışma alanı açar.
+        </div>
+      </div>
+
+      @if (error()) {
+        <div class="tz-gate__error">{{ error() }}</div>
+      }
+
+      @if (demoEnabled()) {
+        <button
+          type="button"
+          class="tz-btn tz-btn--primary tz-btn--block"
+          [disabled]="demo.starting()"
+          (click)="startDemo()"
+        >
+          @if (demo.starting()) {
+            <span class="tz-spinner"></span>
+            Alan hazırlanıyor
+          } @else {
+            <tz-icon name="play" />
+            Demoyu başlat
+          }
+        </button>
+
+        <div class="tz-gate__sep">veya</div>
+      }
+
+      <form #form="ngForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="signIn(form)" novalidate>
+        <div class="tz-field">
+          <label for="user">Kullanıcı adı veya e-posta</label>
+          <input
+            id="user"
+            name="emailOrUserName"
+            class="tz-input"
+            autocomplete="username"
+            [(ngModel)]="model.emailOrUserName"
+            required
+          />
+        </div>
+
+        <div class="tz-field">
+          <label for="pass">Parola</label>
+          <input
+            id="pass"
+            name="password"
+            type="password"
+            class="tz-input"
+            autocomplete="current-password"
+            [(ngModel)]="model.password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="tz-btn tz-btn--block" [disabled]="busy()">
+          @if (busy()) {
+            <span class="tz-spinner"></span>
+          } @else {
+            <tz-icon name="lock" />
+          }
+          Giriş yap
+        </button>
+      </form>
+
+      @if (demoEnabled()) {
+        <div class="tz-gate__note">
+          Demo alanı sınırlıdır: sayılı işlem hakkı ve kısa bir oturum süresi vardır.
+          Oturum bittiğinde alan bir sonraki ziyaretçi için sıfırlanır.
+        </div>
+      } @else {
+        <div class="tz-gate__note">
+          Geliştirme kurulumunda ilk kullanıcı <code>admin</code> / <code>1</code> olarak
+          oluşturulur.
+        </div>
+      }
+    </div>
+  </section>
+</div>
+
+<tz-toast-host />

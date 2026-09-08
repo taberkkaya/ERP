@@ -1,0 +1,411 @@
+/* ============================================================================
+   Tezgah — uygulama kabuğu: sol ray, üst çubuk, içerik alanı.
+   ========================================================================= */
+
+.tz-shell {
+  display: grid;
+  grid-template-columns: var(--tz-rail) 1fr;
+  min-height: 100vh;
+  transition: grid-template-columns var(--tz-slow);
+}
+
+.tz-shell.collapsed {
+  grid-template-columns: var(--tz-rail-collapsed) 1fr;
+}
+
+/* --- sol ray -------------------------------------------------------------- */
+
+.tz-rail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  border-right: 1px solid var(--tz-line);
+  background: var(--tz-surface);
+  overflow: hidden;
+}
+
+.tz-rail__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--tz-topbar);
+  padding: 0 16px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--tz-line-soft);
+  color: var(--tz-ink);
+  white-space: nowrap;
+}
+
+.tz-rail__mark {
+  flex: 0 0 auto;
+  color: var(--tz-accent);
+}
+
+.tz-rail__mark tz-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.tz-rail__word {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tz-rail__word small {
+  display: block;
+  color: var(--tz-muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tz-rail__nav {
+  flex: 1 1 auto;
+  padding: 12px 10px 20px;
+  overflow-y: auto;
+}
+
+.tz-rail__section {
+  margin: 18px 0 6px;
+  padding: 0 10px;
+  color: var(--tz-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tz-rail__section:first-child { margin-top: 2px; }
+
+.tz-rail__link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 10px;
+  border-radius: var(--tz-radius-sm);
+  color: var(--tz-ink-2);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--tz-fast), color var(--tz-fast);
+}
+
+.tz-rail__link + .tz-rail__link { margin-top: 1px; }
+
+.tz-rail__link:hover {
+  background: var(--tz-surface-2);
+  color: var(--tz-ink);
+}
+
+.tz-rail__link.active {
+  background: var(--tz-accent-soft);
+  color: var(--tz-accent);
+}
+
+/* Etkin satırın sol kenarındaki kehribar şerit — imza detayı. */
+.tz-rail__link.active::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  border-radius: 0 3px 3px 0;
+  background: var(--tz-accent);
+  transform: translateY(-50%);
+}
+
+.tz-rail__link tz-icon {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  opacity: 0.9;
+}
+
+.tz-rail__count {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: var(--tz-surface-3);
+  color: var(--tz-ink-2);
+  font-family: var(--tz-font-mono);
+  font-size: 11px;
+}
+
+.tz-rail__foot {
+  flex: 0 0 auto;
+  padding: 10px;
+  border-top: 1px solid var(--tz-line-soft);
+}
+
+/* Daraltılmış rayda yalnızca ikonlar kalır. */
+.collapsed .tz-rail__word,
+.collapsed .tz-rail__section,
+.collapsed .tz-rail__link span,
+.collapsed .tz-rail__count,
+.collapsed .tz-user__text {
+  display: none;
+}
+
+.collapsed .tz-rail__link,
+.collapsed .tz-rail__brand,
+.collapsed .tz-user {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.collapsed .tz-rail__section {
+  height: 10px;
+  margin: 10px 0;
+}
+
+/* --- kullanıcı kutusu ----------------------------------------------------- */
+
+.tz-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: var(--tz-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--tz-fast);
+}
+
+.tz-user:hover { background: var(--tz-surface-2); }
+
+.tz-user__badge {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--tz-accent);
+  color: var(--tz-accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tz-user__text { min-width: 0; }
+
+.tz-user__name {
+  overflow: hidden;
+  color: var(--tz-ink);
+  font-size: 13px;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tz-user__role {
+  color: var(--tz-muted);
+  font-size: 11px;
+}
+
+/* --- üst çubuk ------------------------------------------------------------ */
+
+.tz-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tz-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--tz-topbar);
+  padding: 0 20px;
+  border-bottom: 1px solid var(--tz-line);
+  background: color-mix(in srgb, var(--tz-canvas) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.tz-topbar__title {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tz-topbar__spacer { flex: 1 1 auto; }
+
+.tz-iconbtn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--tz-radius-sm);
+  background: transparent;
+  color: var(--tz-ink-2);
+  cursor: pointer;
+  transition: background var(--tz-fast), color var(--tz-fast), border-color var(--tz-fast);
+}
+
+.tz-iconbtn:hover {
+  border-color: var(--tz-line);
+  background: var(--tz-surface-2);
+  color: var(--tz-ink);
+}
+
+.tz-iconbtn tz-icon { width: 17px; height: 17px; }
+
+/* --- içerik --------------------------------------------------------------- */
+
+.tz-content {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 1520px;
+  padding: 22px 20px 48px;
+}
+
+.tz-page__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.tz-page__lead { min-width: 0; flex: 1 1 auto; }
+
+.tz-page__eyebrow {
+  margin-bottom: 3px;
+  color: var(--tz-accent);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tz-page__desc {
+  margin-top: 5px;
+  color: var(--tz-muted);
+  font-size: 13px;
+}
+
+.tz-page__tools {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- ızgaralar ------------------------------------------------------------ */
+
+.tz-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.tz-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tz-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tz-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 1180px) {
+  .tz-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tz-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .tz-grid--2,
+  .tz-grid--3,
+  .tz-grid--4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* --- duyarlılık ----------------------------------------------------------- */
+
+/* Dar ekranda ray bir çekmeceye dönüşür: ızgaradan çıkar, üstte yüzer. */
+@media (max-width: 900px) {
+  .tz-shell,
+  .tz-shell.collapsed { grid-template-columns: minmax(0, 1fr); }
+
+  .tz-rail {
+    position: fixed;
+    z-index: 60;
+    width: var(--tz-rail);
+    box-shadow: var(--tz-shadow-lg);
+    transform: translateX(-100%);
+    transition: transform var(--tz-slow);
+  }
+
+  .tz-shell.drawer-open .tz-rail { transform: none; }
+
+  /* Daraltma dar ekranda anlamsız; çekmece her zaman tam genişlikte açılır. */
+  .collapsed .tz-rail__word,
+  .collapsed .tz-rail__section,
+  .collapsed .tz-rail__link span,
+  .collapsed .tz-user__text { display: revert; }
+
+  .collapsed .tz-rail__link,
+  .collapsed .tz-rail__brand,
+  .collapsed .tz-user { justify-content: flex-start; padding-left: 10px; }
+
+  .tz-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: var(--tz-overlay);
+  }
+
+  .tz-content { padding: 16px 14px 40px; }
+  .tz-topbar { padding: 0 14px; }
+}
+
+/* Dar ekranda başlık ile araç şeridi yan yana sığmıyor: başlık birkaç harflik
+   bir sütuna sıkışıyor, sekmeler de dışarı taşıyordu. Araçlar başlığın altına
+   iniyor. */
+@media (max-width: 880px) {
+  .tz-page__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .tz-page__tools {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+
+  /* Kaydırma yalnızca sekme şeridinde: araç bloğunun tamamına verilince
+     düğmelerin altında gereksiz bir kaydırma çubuğu kalıyordu. */
+  .tz-page__tools .tz-tabs {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .tz-search { flex: 1 1 180px; min-width: 0; }
+}
+
+/* Demo şeridi ve üst çubuk birlikte yapışıyor: şerit kaydırmada kaybolursa
+   kalan süre ve kota gözden çıkıyor. */
+.tz-headstack {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.tz-headstack .tz-topbar {
+  position: static;
+}

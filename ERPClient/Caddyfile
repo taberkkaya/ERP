@@ -1,0 +1,44 @@
+# Caddy 2.7'den beri güvenilmeyen bir kaynaktan gelen X-Forwarded-For'u eziyor.
+# Önümüzde Coolify'ın ters vekili duruyor ve o da Docker ağından geliyor; onu
+# tanıtmazsak uygulamaya ziyaretçinin adresi değil Docker ağının adresi ulaşır.
+{
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+# SITE_ADDRESS üretimde alan adı (Caddy sertifikayı kendisi alır), yerel çalıştırmada
+# ise ":80" — orada TLS ne mümkün ne de istenir.
+{$SITE_ADDRESS} {
+	root * /srv
+	encode gzip zstd
+
+	# API adresini taşıyor ve her sayfa açılışında okunuyor; asla önbellekten
+	# servis edilmemeli.
+	@runtime-config path /assets/config.json
+	header @runtime-config Cache-Control "no-store"
+
+	# İstemciyle aynı origin, yani tarayıcı hiçbir zaman cross-origin istek
+	# atmıyor ve API'nin bu dağıtım için CORS kaydına ihtiyacı olmuyor.
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	# Yönlendirme Angular'ın: gerçek bir dosya olmayan her yol index.html.
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Parmak izli dosya adları kalıcı; index.html her açılışta tazelenmeli.
+	@immutable path_regexp \.[0-9A-Z]{8}\.(js|css|woff2)$
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	@index path /index.html /
+	header @index Cache-Control "no-cache"
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}

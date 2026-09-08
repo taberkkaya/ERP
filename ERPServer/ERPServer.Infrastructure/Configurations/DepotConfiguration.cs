@@ -8,6 +8,6 @@ internal sealed class DepotConfiguration : IEntityTypeConfiguration<Depot>
 {
     public void Configure(EntityTypeBuilder<Depot> builder)
     {
-        builder.Property(p => p.Name).HasColumnType("varchar(50)");
+        builder.Property(p => p.Name).HasColumnType("nvarchar(100)");
     }
 }

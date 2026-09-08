@@ -1,0 +1,117 @@
+<tz-page
+  eyebrow="Tanımlar"
+  heading="Depolar"
+  description="Stok giriş ve çıkışlarının işlendiği ambarlar."
+>
+  <ng-container pageTools>
+    <tz-search [value]="search()" (valueChange)="search.set($event)" placeholder="Depo, şehir" />
+    <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+      <tz-icon name="plus" />
+      Yeni depo
+    </button>
+  </ng-container>
+
+  <tz-panel flush>
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!filtered().length) {
+      <tz-empty
+        icon="depots"
+        [title]="search() ? 'Eşleşen depo yok' : 'Henüz depo yok'"
+        [text]="
+          search()
+            ? 'Arama terimini değiştirip yeniden deneyin.'
+            : 'Fatura ve üretim kayıtları bir depoya işlenir; önce depo tanımlayın.'
+        "
+      >
+        @if (!search()) {
+          <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+            <tz-icon name="plus" />
+            Yeni depo
+          </button>
+        }
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Depo</th>
+              <th>Şehir</th>
+              <th>İlçe</th>
+              <th>Adres</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (depot of filtered(); track depot.id) {
+              <tr>
+                <td class="tz-table__primary">{{ depot.name }}</td>
+                <td>{{ depot.city || '—' }}</td>
+                <td>{{ depot.town || '—' }}</td>
+                <td>
+                  <span class="tz-table__meta tz-truncate" style="display: block; max-width: 360px">
+                    {{ depot.address || '—' }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <button type="button" class="tz-rowbtn" (click)="openEdit(depot)" aria-label="Düzenle">
+                    <tz-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(depot)"
+                    aria-label="Sil"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (editing(); as model) {
+  <tz-modal [title]="isNew() ? 'Yeni depo' : 'Depoyu düzenle'" (close)="close()">
+    <form #form="ngForm" id="depotForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-field">
+        <label for="depotName">Depo adı</label>
+        <input id="depotName" name="name" class="tz-input" [(ngModel)]="model.name" required />
+      </div>
+
+      <div class="tz-cols">
+        <div class="tz-field">
+          <label for="depotCity">Şehir</label>
+          <input id="depotCity" name="city" class="tz-input" [(ngModel)]="model.city" />
+        </div>
+        <div class="tz-field">
+          <label for="depotTown">İlçe</label>
+          <input id="depotTown" name="town" class="tz-input" [(ngModel)]="model.town" />
+        </div>
+      </div>
+
+      <div class="tz-field">
+        <label for="depotAddress">Adres</label>
+        <textarea
+          id="depotAddress"
+          name="address"
+          class="tz-textarea"
+          [(ngModel)]="model.address"
+        ></textarea>
+      </div>
+    </form>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="depotForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="check" />
+        Kaydet
+      </button>
+    </ng-container>
+  </tz-modal>
+}

@@ -1,0 +1,221 @@
+/* ============================================================================
+   Tezgah — temel katman: sıfırlama, tipografi, form denetimleri.
+   ========================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--tz-canvas);
+  color: var(--tz-ink);
+  font-family: var(--tz-font);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+h1 { font-size: 22px; }
+h2 { font-size: 17px; }
+h3 { font-size: 15px; }
+
+p { margin: 0 0 10px; }
+p:last-child { margin-bottom: 0; }
+
+a {
+  color: var(--tz-accent);
+  text-decoration: none;
+}
+
+a:hover { color: var(--tz-accent-hi); }
+
+hr {
+  height: 1px;
+  margin: 16px 0;
+  border: 0;
+  background: var(--tz-line);
+}
+
+::selection {
+  background: var(--tz-accent-ring);
+  color: var(--tz-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--tz-accent);
+  outline-offset: 2px;
+}
+
+/* Kaydırma çubuğu koyu temada beyaz bir şerit bırakıyordu. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--tz-line-strong) transparent;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+*::-webkit-scrollbar-thumb {
+  background: var(--tz-line-strong);
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover { background-clip: content-box; background-color: var(--tz-muted); }
+
+/* --- rakamlar ------------------------------------------------------------ */
+
+/* Miktar, tutar, tarih ve belge numarası: sütun içinde hizalanmaları için
+   tabular monospace. Tablo okunurluğunun tamamı buna bağlı. */
+.tz-num {
+  font-family: var(--tz-font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* --- form denetimleri ---------------------------------------------------- */
+
+label,
+.tz-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--tz-ink-2);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.tz-input,
+.tz-select,
+.tz-textarea {
+  display: block;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--tz-line);
+  border-radius: var(--tz-radius-sm);
+  background: var(--tz-surface-2);
+  color: var(--tz-ink);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: border-color var(--tz-fast), box-shadow var(--tz-fast);
+}
+
+.tz-textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.tz-input::placeholder,
+.tz-textarea::placeholder {
+  color: var(--tz-muted);
+}
+
+.tz-input:hover,
+.tz-select:hover,
+.tz-textarea:hover {
+  border-color: var(--tz-line-strong);
+}
+
+.tz-input:focus,
+.tz-select:focus,
+.tz-textarea:focus {
+  outline: 0;
+  border-color: var(--tz-accent);
+  box-shadow: 0 0 0 3px var(--tz-accent-ring);
+}
+
+.tz-input:disabled,
+.tz-select:disabled,
+.tz-textarea:disabled {
+  background: var(--tz-surface-3);
+  color: var(--tz-muted);
+  cursor: not-allowed;
+}
+
+.tz-input[type="number"] {
+  font-family: var(--tz-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tarayıcının kendi ok işareti koyu zeminde kayboluyor; kendi işaretimizi
+   çiziyoruz. */
+.tz-select {
+  padding-right: 32px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 16px) calc(50% + 1px), calc(100% - 11px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  appearance: none;
+  cursor: pointer;
+}
+
+.tz-select option {
+  background: var(--tz-surface);
+  color: var(--tz-ink);
+}
+
+/* Gönderilmiş formda dolmamış zorunlu alan. Angular'ın ng-invalid'i alan daha
+   hiç dokunulmadan da geldiği için tek başına kullanılmıyor. */
+.tz-form.submitted .ng-invalid.tz-input,
+.tz-form.submitted .ng-invalid.tz-select,
+.tz-form.submitted .ng-invalid.tz-textarea,
+.tz-input.ng-touched.ng-invalid,
+.tz-select.ng-touched.ng-invalid {
+  border-color: var(--tz-danger);
+}
+
+.tz-form.submitted .ng-invalid.tz-input:focus,
+.tz-input.ng-touched.ng-invalid:focus {
+  box-shadow: 0 0 0 3px var(--tz-danger-soft);
+}
+
+.tz-field { margin-bottom: 14px; }
+.tz-field:last-child { margin-bottom: 0; }
+
+.tz-hint {
+  margin-top: 5px;
+  color: var(--tz-muted);
+  font-size: 12px;
+}
+
+/* --- onay kutusu --------------------------------------------------------- */
+
+.tz-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--tz-ink);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tz-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--tz-accent);
+  cursor: pointer;
+}

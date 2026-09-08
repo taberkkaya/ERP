@@ -1,31 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr" data-theme="dark">
   <head>
     <meta charset="utf-8" />
-    <title>ERP</title>
+    <title>Tezgah — Üretim Yönetim Sistemi</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <meta
+      name="description"
+      content="Sipariş, reçete, stok, üretim ve fatura akışını tek yerden yürüten üretim yönetim sistemi."
+    />
+    <meta name="theme-color" content="#0f1216" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
     />
-    <link
-      rel="stylesheet"
-      href="assets/plugins/fontawesome-free/css/all.min.css"
-    />
-    <link rel="stylesheet" href="assets/dist/css/adminlte.min.css" />
+
+    <!--
+      Tema, Angular açılmadan önce kök öğeye yazılıyor. Uygulama başladıktan sonra
+      yazılsaydı ilk boyamada koyu tema açık ekranda bir an parlıyordu.
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('tz-theme');
+          var theme =
+            saved === 'light' || saved === 'dark'
+              ? saved
+              : window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          /* gizli sekmede localStorage okunamıyor; koyu tema ile devam. */
+        }
+      })();
+    </script>
   </head>
-  <body class="hold-transition sidebar-mini">
+  <body>
     <app-root></app-root>
-
-    <script src="assets/plugins/jquery/jquery.min.js"></script>
-    <script src="assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script
-      src="https://kit.fontawesome.com/0ba668380d.js"
-      crossorigin="anonymous"
-    ></script>
-    <script src="assets/dist/js/adminlte.min.js"></script>
   </body>
 </html>
