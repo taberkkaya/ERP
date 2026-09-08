@@ -1,0 +1,73 @@
+# İmajları GitHub'ın makinelerinde derleyip GHCR'ye iter.
+#
+# Sebep: yayın sunucusu 2 çekirdek / 4 GB. Angular derlemesi ve `dotnet publish`
+# birlikte 2 GB'ın üzerinde bellek istiyor ve sunucuda çalıştıklarında yanı başındaki
+# canlı servisleri düşürüyorlar. Actions'ın koşucusu 4 çekirdek / 16 GB ve ücretsiz;
+# sunucuya yalnızca hazır imaj iniyor.
+
+name: images
+
+on:
+  push:
+    branches: [master, redesign-demo]
+    paths:
+      - 'ERPServer/**'
+      - 'ERPClient/**'
+      - '.github/workflows/images.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      # Biri patlarsa digerinin sonucunu da gormek istiyoruz.
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            context: ./ERPServer
+          - name: client
+            context: ./ERPClient
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: GHCR oturumu
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Etiketler
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # Depo adi buyuk harf icerebiliyor; GHCR yalnizca kucuk harf kabul ediyor.
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/tezgah-${{ matrix.name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=sha,format=long
+
+      - name: Derle ve it
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Katman onbellegi Actions'ta tutuluyor; ikinci derlemeden itibaren
+          # npm install ve dotnet restore adimlari tekrar calismiyor.
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

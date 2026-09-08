@@ -128,6 +128,18 @@ alır ve süresi dolmadan yeniler; 80 ve 443 portları doğrulama için dışar�
 `docker-compose.coolify.yml` Coolify için hazırlanmış varyanttır: hiçbir servis host
 portu yayınlamaz, TLS'i Coolify'ın ters vekili sonlandırır.
 
+**İmajlar sunucuda derlenmez.** `.github/workflows/images.yml` her push'ta Angular ve
+.NET imajlarını GitHub'ın koşucusunda derleyip `ghcr.io/<kullanıcı>/tezgah-api` ve
+`tezgah-client` olarak GHCR'ye iter; sunucu yalnızca hazır imajı çeker. Sebebi
+somut: yayın sunucusu 2 çekirdek / 4 GB ve swap'sızdı, `npm install` ile
+`dotnet publish` birlikte 2 GB'ın üzerinde bellek istiyor ve sunucuda
+çalıştıklarında yanı başındaki canlı servisleri düşürüyorlardı. Çekilecek etiketi
+`IMAGE_TAG` belirler.
+
+> GHCR paketleri ilk oluşturulduğunda private gelir. Sunucunun kimlik doğrulamadan
+> çekebilmesi için GitHub → Packages → ilgili paket → *Package settings* →
+> *Change visibility* → **Public** yapılmalıdır (paket başına bir kez).
+
 1. Coolify'da yeni bir **Docker Compose** kaynağı oluşturun, bu depoyu bağlayın.
 2. Compose dosyası olarak `docker-compose.coolify.yml` seçin.
 3. `.env.example` içindeki değişkenleri panelin ortam değişkenleri bölümüne girin

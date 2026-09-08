@@ -6,10 +6,18 @@
 # demo sandbox davranışı — kendi başına çalışan yığınla aynı.
 #
 # Ortam değişkenleri Coolify arayüzünden veriliyor; .env.example ile aynı isimler.
+#
+# İmajlar burada derlenmiyor: .github/workflows/images.yml onları GHCR'ye itiyor,
+# bu dosya yalnızca hazır imajı çekip çalıştırıyor. Hangi etiketin çekileceğini
+# IMAGE_TAG belirliyor (varsayılan: latest).
 services:
   api:
-    build:
-      context: ./ERPServer
+    # Imaj GitHub Actions'ta derlenip GHCR'ye itiliyor; sunucu yalnizca cekiyor.
+    # Derlemeyi burada yapmak (2 cekirdek / 4 GB) yanindaki canli servisleri
+    # dusuruyordu.
+    image: ghcr.io/taberkkaya/tezgah-api:${IMAGE_TAG:-latest}
+    # Ayni etiket yeni bir imaja isaret ettiginde eskisiyle devam edilmesin.
+    pull_policy: always
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__SqlServer: >-
@@ -48,8 +56,8 @@ services:
     restart: unless-stopped
 
   client:
-    build:
-      context: ./ERPClient
+    image: ghcr.io/taberkkaya/tezgah-client:${IMAGE_TAG:-latest}
+    pull_policy: always
     depends_on:
       api:
         condition: service_healthy
