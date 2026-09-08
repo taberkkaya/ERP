@@ -76,13 +76,19 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
       MSSQL_PID: Express
-      MSSQL_MEMORY_LIMIT_MB: "1024"
+      MSSQL_MEMORY_LIMIT_MB: ${MSSQL_MEMORY_LIMIT_MB:-768}
     ports:
       # Yalnızca sunucunun kendi localhost'una bağlı: dışarıdan doğrudan
       # erişilemez. Kendi bilgisayarından bağlanmak için SSH tüneli kuruluyor:
-      #   ssh -N -L 1433:localhost:1433 root@<sunucu>
+      #   ssh -N -L 1434:localhost:1434 root@<sunucu>
       # SQL Server'ı internete açmak sa hesabı yüzünden kabul edilebilir değil.
-      - "127.0.0.1:1433:1433"
+      #
+      # 1433 aynı sunucudaki başka bir yığın tarafından tutuluyor; çakışırsa
+      # konteyner "port already allocated" ile hiç açılmıyor.
+      - "127.0.0.1:${SQL_HOST_PORT:-1434}:1433"
+    # Sunucuda başka yığınlar da çalışıyor; SQL Server'ın belleği tavanla
+    # sınırlanmazsa komşularını aç bırakıyor.
+    mem_limit: ${SQL_MEM_LIMIT:-1200m}
     volumes:
       - sqlserver-data:/var/opt/mssql
     healthcheck:

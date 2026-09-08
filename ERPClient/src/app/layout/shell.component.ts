@@ -59,6 +59,18 @@ const COLLAPSE_KEY = 'tz-rail-collapsed';
             >
               <tz-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" />
             </button>
+
+            <!-- Çıkış yalnızca raydaki kullanıcı kutusundaydı ve fark edilmiyordu;
+                 alışılmış yeri olan üst çubuğa da kondu. -->
+            <button
+              type="button"
+              class="tz-iconbtn"
+              (click)="signOut()"
+              [attr.aria-label]="demo.isDemo ? 'Demodan çık' : 'Çıkış yap'"
+              [attr.title]="demo.isDemo ? 'Demodan çık' : 'Çıkış yap'"
+            >
+              <tz-icon name="logout" />
+            </button>
           </header>
         </div>
 
@@ -108,6 +120,12 @@ export class ShellComponent implements OnInit {
       });
 
     this.pageTitle.set(this.deepestTitle());
+  }
+
+  signOut(): void {
+    // Demo oturumu sunucuya da bildiriliyor; sandbox sıradaki ziyaretçiye
+    // beklemeden iade edilsin.
+    this.demo.exit();
   }
 
   toggleRail(): void {

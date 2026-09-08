@@ -234,8 +234,9 @@
   height: var(--tz-topbar);
   padding: 0 20px;
   border-bottom: 1px solid var(--tz-line);
-  background: color-mix(in srgb, var(--tz-canvas) 88%, transparent);
-  backdrop-filter: blur(8px);
+  /* Yapisik seride saydam zemin verilince altindan kayan icerik gorunuyordu;
+     cam etkisi okunurluga degmedi. */
+  background: var(--tz-canvas);
 }
 
 .tz-topbar__title {

@@ -225,7 +225,9 @@
   gap: 12px;
   padding: 7px 20px;
   border-bottom: 1px solid var(--tz-line);
-  background: var(--tz-accent-soft);
+  /* --tz-accent-soft saydam; yapisik seritte altindan kayan icerik okunuyordu.
+     Ayni ton, zemine karistirilarak opak veriliyor. */
+  background: color-mix(in srgb, var(--tz-accent) 13%, var(--tz-canvas));
   color: var(--tz-ink);
   font-size: 12.5px;
 }
