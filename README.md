@@ -50,6 +50,21 @@ veritabanına gidiyor.
 Stok hiçbir yerde alan olarak tutulmuyor; her zaman `StockMovement` kayıtlarının
 giriş–çıkış farkından hesaplanıyor.
 
+## 👤 Kullanıcı yönetimi
+
+`/kullanicilar` ekranından hesap açılır, düzenlenir, silinir ve parola sıfırlanır
+(`Users/GetAll`, `Create`, `Update`, `DeleteById`, `ChangePassword`). Rol kavramı yok;
+giriş yapabilen herkes aynı yetkide.
+
+İki koruma var: kişi **kendi hesabını silemez** (oturumu anında geçersizleşirdi) ve
+**sistemdeki son kullanıcı silinemez** (kimse giremez hâle gelirdi). Yeni hesaplar
+`EmailConfirmed = true` ile açılır; kurulumda e-posta onayı zorunlu olduğu için aksi
+hâlde hesap oluşur ama giriş yapılamazdı.
+
+Demo oturumunda kullanıcı yönetimi **salt okunurdur** — sandbox izole olsa da kullanıcı
+kayıtları iş verisiyle birlikte temizlenmediği için bir ziyaretçinin girdiği ad ve
+e-posta sonrakine görünür kalırdı. Menüde de gizlenir.
+
 ## 🧪 Demo modu
 
 `Demo:Enabled` açıkken uygulama başlangıçta sabit sayıda **sandbox veritabanı** hazırlar
