@@ -4,6 +4,12 @@ export interface MenuItem {
   url: string;
   /** Yalnızca tam eşleşmede etkin sayılır — kök yol her şeye ön ek olduğu için gerekli. */
   exact?: boolean;
+
+  /**
+   * Demo oturumunda gizlenir. Sunucu da bu ekranın yazma uçlarını demoda
+   * reddediyor; menüde bırakmak ziyaretçiyi çalışmayan bir sayfaya götürürdü.
+   */
+  hideInDemo?: boolean;
 }
 
 export interface MenuSection {
@@ -30,6 +36,12 @@ export const MENU: MenuSection[] = [
     items: [
       { label: 'Siparişler', icon: 'orders', url: '/siparisler' },
       { label: 'Üretim', icon: 'production', url: '/uretim' },
+    ],
+  },
+  {
+    title: 'Yönetim',
+    items: [
+      { label: 'Kullanıcılar', icon: 'user', url: '/kullanicilar', hideInDemo: true },
     ],
   },
   {

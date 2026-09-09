@@ -9,6 +9,16 @@ export interface LoginResponseModel {
   refreshTokenExpires: string;
 }
 
+/** Kullanici yonetimi ekranindaki hesap kaydi. */
+export class AppUserModel {
+  id = '';
+  firstName = '';
+  lastName = '';
+  fullName = '';
+  userName = '';
+  email = '';
+}
+
 export class UserModel {
   id = '';
   name = '';

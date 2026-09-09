@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { DemoService } from '../core/demo.service';
@@ -22,7 +22,7 @@ import { IconComponent } from '../ui/icon.component';
       </a>
 
       <nav class="tz-rail__nav">
-        @for (section of menu; track section.title) {
+        @for (section of menu(); track section.title) {
           @if (section.title) {
             <div class="tz-rail__section">{{ section.title }}</div>
           }
@@ -57,7 +57,16 @@ import { IconComponent } from '../ui/icon.component';
 export class RailComponent {
   readonly auth = inject(AuthService);
   readonly demo = inject(DemoService);
-  readonly menu = MENU;
+  /**
+   * Demo ziyaretçisine kapalı satırlar çıkarılıyor; bir bölümün tüm satırları
+   * düşerse başlığı da kalmasın diye bölüm de eleniyor.
+   */
+  readonly menu = computed(() =>
+    MENU.map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !(item.hideInDemo && this.demo.isDemo)),
+    })).filter((section) => section.items.length > 0)
+  );
 
   /** Dar ekranda çekmeceyi kapatmak için kabuğa haber verir. */
   @Output() navigate = new EventEmitter<void>();

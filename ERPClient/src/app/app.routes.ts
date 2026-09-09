@@ -75,6 +75,11 @@ export const routes: Routes = [
           import('./pages/invoices/invoices.component').then((m) => m.InvoicesComponent),
       },
       {
+        path: 'kullanicilar',
+        data: { title: 'Kullanıcılar' },
+        loadComponent: () => import('./pages/users/users.component').then((m) => m.UsersComponent),
+      },
+      {
         path: 'uretim',
         data: { title: 'Üretim' },
         loadComponent: () =>

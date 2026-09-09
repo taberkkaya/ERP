@@ -5,7 +5,13 @@ import { DemoErrorCode } from '../models/demo.model';
 import { AuthService } from './auth.service';
 import { DemoService } from './demo.service';
 
-const WRITE_ACTIONS = ['/create', '/update', '/deletebyid', '/requirementsplanningbyorderid'];
+const WRITE_ACTIONS = [
+  '/create',
+  '/update',
+  '/deletebyid',
+  '/changepassword',
+  '/requirementsplanningbyorderid',
+];
 
 const isWrite = (url: string): boolean => {
   const path = url.split('?')[0].toLocaleLowerCase('en');

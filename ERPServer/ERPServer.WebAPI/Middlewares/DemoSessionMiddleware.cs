@@ -22,7 +22,18 @@ public sealed class DemoSessionMiddleware(RequestDelegate next)
         "create",
         "update",
         "deletebyid",
+        "changepassword",
         "requirementsplanningbyorderid"
+    };
+
+    /// <summary>
+    /// Demo oturumunda salt okunur kalan alanlar. Sandbox izole ve oturum sonunda
+    /// siliniyor, ama kullanici kayitlari is verisiyle birlikte temizlenmiyor;
+    /// bir ziyaretcinin girdigi ad ve e-posta sonrakine gorunur kalirdi.
+    /// </summary>
+    private static readonly HashSet<string> BlockedControllers = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "users"
     };
 
     public async Task InvokeAsync(HttpContext context, IDemoSessionService demoSessionService)
@@ -50,8 +61,15 @@ public sealed class DemoSessionMiddleware(RequestDelegate next)
             return;
         }
 
-        string? action = ReadAction(context.Request.Path);
+        (string? controller, string? action) = ReadRoute(context.Request.Path);
         bool isWrite = action is not null && WriteActions.Contains(action);
+
+        if (isWrite && controller is not null && BlockedControllers.Contains(controller))
+        {
+            await WriteAsync(context, StatusCodes.Status403Forbidden, "action_blocked",
+                "Demo oturumunda kullanıcı yönetimi salt okunurdur.");
+            return;
+        }
 
         if (isWrite && !demoSessionService.TryRegisterWrite(sessionId))
         {
@@ -66,11 +84,11 @@ public sealed class DemoSessionMiddleware(RequestDelegate next)
     }
 
     /// <summary>Her iş ucu /api/{controller}/{action} biçiminde.</summary>
-    private static string? ReadAction(PathString path)
+    private static (string? Controller, string? Action) ReadRoute(PathString path)
     {
         string[] segments = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
 
-        return segments.Length < 3 ? null : segments[^1];
+        return segments.Length < 3 ? (null, null) : (segments[1], segments[^1]);
     }
 
     private static Task WriteAsync(HttpContext context, int statusCode, string demoCode, string message)

@@ -1,0 +1,187 @@
+<tz-page
+  eyebrow="Yönetim"
+  heading="Kullanıcılar"
+  description="Uygulamaya giriş yapabilen hesaplar."
+>
+  <ng-container pageTools>
+    <tz-search [value]="search()" (valueChange)="search.set($event)" placeholder="Ad, kullanıcı adı, e-posta" />
+    <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+      <tz-icon name="plus" />
+      Yeni kullanıcı
+    </button>
+  </ng-container>
+
+  <tz-panel flush heading="Hesaplar" [sub]="users().length + ' kayıt'">
+    @if (loading()) {
+      <div class="tz-loading"><span class="tz-spinner"></span> Yükleniyor</div>
+    } @else if (!filtered().length) {
+      <tz-empty
+        icon="customers"
+        [title]="users().length ? 'Eşleşen kullanıcı yok' : 'Henüz kullanıcı yok'"
+        text="Yeni bir hesap açtığınızda o kişi kendi kullanıcı adı ve parolasıyla giriş yapabilir."
+      >
+        @if (!users().length) {
+          <button type="button" class="tz-btn tz-btn--primary" (click)="openCreate()">
+            <tz-icon name="plus" />
+            Yeni kullanıcı
+          </button>
+        }
+      </tz-empty>
+    } @else {
+      <div class="tz-tablewrap">
+        <table class="tz-table">
+          <thead>
+            <tr>
+              <th>Ad Soyad</th>
+              <th>Kullanıcı adı</th>
+              <th>E-posta</th>
+              <th class="actions"><span class="tz-sr">İşlemler</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filtered(); track user.id) {
+              <tr>
+                <td>
+                  <span class="tz-row" style="gap: 10px">
+                    <span class="tz-user__badge" style="width: 26px; height: 26px; font-size: 11px">
+                      {{ initials(user) }}
+                    </span>
+                    <span class="tz-table__primary">{{ user.fullName }}</span>
+                  </span>
+                </td>
+                <td class="num">{{ user.userName }}</td>
+                <td>{{ user.email || '—' }}</td>
+                <td class="actions">
+                  <button
+                    type="button"
+                    class="tz-btn tz-btn--sm"
+                    (click)="openReset(user)"
+                    title="Parolayı değiştir"
+                  >
+                    <tz-icon name="lock" />
+                    Parola
+                  </button>
+                  <button type="button" class="tz-rowbtn" (click)="openEdit(user)" aria-label="Düzenle">
+                    <tz-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="tz-rowbtn tz-rowbtn--danger"
+                    (click)="remove(user)"
+                    aria-label="Sil"
+                  >
+                    <tz-icon name="trash" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </tz-panel>
+</tz-page>
+
+@if (editing(); as draft) {
+  <tz-modal [title]="isNew() ? 'Yeni kullanıcı' : 'Kullanıcıyı düzenle'" (close)="close()">
+    <form #form="ngForm" id="userForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="save(form)" novalidate>
+      <div class="tz-cols">
+        <div class="tz-field">
+          <label for="firstName">Ad</label>
+          <input id="firstName" name="firstName" class="tz-input" [(ngModel)]="draft.firstName" required minlength="2" />
+        </div>
+        <div class="tz-field">
+          <label for="lastName">Soyad</label>
+          <input id="lastName" name="lastName" class="tz-input" [(ngModel)]="draft.lastName" required minlength="2" />
+        </div>
+      </div>
+
+      <div class="tz-field">
+        <label for="userName">Kullanıcı adı</label>
+        <input
+          id="userName"
+          name="userName"
+          class="tz-input"
+          autocomplete="off"
+          [(ngModel)]="draft.userName"
+          required
+          minlength="3"
+        />
+        <div class="tz-hint">Giriş ekranında bu adla ya da e-postayla giriş yapılabilir.</div>
+      </div>
+
+      <div class="tz-field">
+        <label for="email">E-posta</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          class="tz-input"
+          autocomplete="off"
+          [(ngModel)]="draft.email"
+          required
+          email
+        />
+      </div>
+
+      @if (isNew()) {
+        <div class="tz-field">
+          <label for="password">Parola</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            class="tz-input"
+            autocomplete="new-password"
+            [(ngModel)]="draft.password"
+            required
+            minlength="4"
+          />
+          <div class="tz-hint">Sonradan bu ekrandaki "Parola" düğmesinden değiştirilebilir.</div>
+        </div>
+      }
+    </form>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="close()">Vazgeç</button>
+      <button type="submit" form="userForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="check" />
+        Kaydet
+      </button>
+    </ng-container>
+  </tz-modal>
+}
+
+@if (resetting(); as user) {
+  <tz-modal title="Parolayı değiştir" slim (close)="closeReset()">
+    <p class="tz-ink2" style="margin-bottom: 14px">
+      <strong>{{ user.fullName }}</strong> ({{ user.userName }}) hesabı için yeni parola.
+    </p>
+
+    <form #pwForm="ngForm" id="pwForm" class="tz-form" [class.submitted]="submitted()" (ngSubmit)="savePassword(pwForm)" novalidate>
+      <div class="tz-field">
+        <label for="newPassword">Yeni parola</label>
+        <input
+          id="newPassword"
+          name="newPassword"
+          type="password"
+          class="tz-input"
+          autocomplete="new-password"
+          [ngModel]="newPassword()"
+          (ngModelChange)="newPassword.set($event)"
+          required
+          minlength="4"
+        />
+        <div class="tz-hint">Eski parola sorulmaz; bu bir yönetici sıfırlamasıdır.</div>
+      </div>
+    </form>
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="closeReset()">Vazgeç</button>
+      <button type="submit" form="pwForm" class="tz-btn tz-btn--primary">
+        <tz-icon name="lock" />
+        Parolayı güncelle
+      </button>
+    </ng-container>
+  </tz-modal>
+}
