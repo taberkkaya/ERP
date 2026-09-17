@@ -39,6 +39,20 @@ services:
       Demo__AbsoluteTimeoutMinutes: ${DEMO_SESSION_MINUTES:-15}
       Demo__MemoryThresholdMegabytes: ${DEMO_MEMORY_MB:-1024}
       Demo__ContactUrl: ${CONTACT_URL:-}
+
+      # Demo e-posta dogrulamasi icin mail gonderimi. SmtpHost bos birakilirsa
+      # mailler sessizce dusuruluyor ve dogrulama kendiliginden kapaniyor; demo
+      # o zaman eskisi gibi tek tikla aciliyor.
+      Mail__From: ${MAIL_FROM:-}
+      Mail__FromName: ${MAIL_FROM_NAME:-Tezgah}
+      Mail__SmtpHost: ${MAIL_SMTP_HOST:-}
+      Mail__SmtpPort: ${MAIL_SMTP_PORT:-587}
+      Mail__Username: ${MAIL_USERNAME:-}
+      Mail__Password: ${MAIL_PASSWORD:-}
+      Mail__UseSsl: ${MAIL_USE_SSL:-true}
+      Mail__ClientBaseUrl: ${CONTACT_URL:-}
+      Demo__RequireEmailVerification: ${DEMO_REQUIRE_EMAIL:-true}
+      Demo__VerifiedGraceHours: ${DEMO_VERIFIED_GRACE_HOURS:-24}
       # Demo kullanimi ataberkkaya.com/admin panelinde gorunsun. ApiKey iki
       # tarafta da ayni olmali; bos birakilirsa bildirim gonderilmez ve demo
       # eskisi gibi calisir.
