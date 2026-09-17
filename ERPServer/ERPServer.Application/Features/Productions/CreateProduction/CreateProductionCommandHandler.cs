@@ -1,5 +1,6 @@
-using MapsterMapper;
+﻿using MapsterMapper;
 using ERPServer.Domain.Entities;
+using ERPServer.Domain.Enums;
 using ERPServer.Domain.Repository;
 using GenericRepository;
 using MediatR;
@@ -71,6 +72,7 @@ internal sealed class CreateProductionCommandHandler(
 
                 newMovements.Add(new StockMovement
                 {
+                    Source = StockMovementSourceEnum.Production,
                     ProductionId = production.Id,
                     ProductId = detail.ProductId,
                     DepotId = depotId,
@@ -87,6 +89,7 @@ internal sealed class CreateProductionCommandHandler(
         // ürünün stoğu hiç artmıyordu; sipariş de hiçbir zaman karşılanamıyordu.
         newMovements.Add(new StockMovement
         {
+            Source = StockMovementSourceEnum.Production,
             ProductionId = production.Id,
             ProductId = request.ProductId,
             DepotId = request.DepotId,

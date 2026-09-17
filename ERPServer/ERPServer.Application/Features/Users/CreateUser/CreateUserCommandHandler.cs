@@ -31,6 +31,8 @@ internal sealed class CreateUserCommandHandler(
             UserName = request.UserName,
             Email = request.Email,
 
+            IsAdmin = request.IsAdmin,
+
             // Kurulumda e-posta onayi zorunlu (SignIn.RequireConfirmedEmail).
             // Onayli isaretlenmezse kullanici olusuyor ama hic giris yapamiyor.
             EmailConfirmed = true

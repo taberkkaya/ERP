@@ -161,17 +161,17 @@
         }
       </tz-panel>
 
-      <tz-panel heading="Fatura hareketi" sub="Kesilen alış ve satış belgelerinin toplamı">
+      <tz-panel heading="Stok hareketi" sub="Depoya giren ve depodan çıkan malın değeri">
         <div class="tz-stack">
           <div>
             <div class="tz-row tz-row--between">
               <span class="tz-row" style="gap: 7px">
-                <tz-icon name="invoice-in" style="width: 15px; height: 15px" />
-                Alış faturaları
+                <tz-icon name="stock-in" style="width: 15px; height: 15px" />
+                Giriş
               </span>
-              <span class="tz-num tz-strong">{{ purchaseTotal() | money }} ₺</span>
+              <span class="tz-num tz-strong">{{ entryValue() | money }} ₺</span>
             </div>
-            <div class="tz-small tz-muted">{{ purchases().length }} belge · stok girişi</div>
+            <div class="tz-small tz-muted">alış faturası ve üretilen mamul</div>
           </div>
 
           <hr />
@@ -179,26 +179,41 @@
           <div>
             <div class="tz-row tz-row--between">
               <span class="tz-row" style="gap: 7px">
-                <tz-icon name="invoice-out" style="width: 15px; height: 15px" />
-                Satış faturaları
+                <tz-icon name="stock-out" style="width: 15px; height: 15px" />
+                Çıkış
               </span>
-              <span class="tz-num tz-strong">{{ salesTotal() | money }} ₺</span>
+              <span class="tz-num tz-strong">{{ exitValue() | money }} ₺</span>
             </div>
-            <div class="tz-small tz-muted">{{ sales().length }} belge · stok çıkışı</div>
+            <div class="tz-small tz-muted">satış faturası ve üretimde tüketilen</div>
           </div>
 
           <hr />
 
           <div class="tz-row tz-row--between">
-            <span class="tz-strong">Fark</span>
+            <span class="tz-strong">Depodaki değer</span>
             <span
               class="tz-num tz-strong"
-              [class.tz-ok]="salesTotal() - purchaseTotal() >= 0"
-              [class.tz-danger]="salesTotal() - purchaseTotal() < 0"
+              [class.tz-ok]="stockValue() >= 0"
+              [class.tz-danger]="stockValue() < 0"
             >
-              {{ salesTotal() - purchaseTotal() | money }} ₺
+              {{ stockValue() | money }} ₺
             </span>
           </div>
+
+          <!-- Kaynak kırılımı: faturalar Defter'de kesiliyor ama stokta bıraktıkları
+               iz burada, üretimin doğurduğu hareketle yan yana duruyor. -->
+          @if (stockSources().length) {
+            <hr />
+
+            <div class="tz-stack" style="gap: 6px">
+              @for (line of stockSources(); track line.source) {
+                <div class="tz-row tz-row--between tz-small">
+                  <span class="tz-muted">{{ line.source }}</span>
+                  <span class="tz-num">{{ line.movementCount }} hareket</span>
+                </div>
+              }
+            </div>
+          }
         </div>
       </tz-panel>
     </div>

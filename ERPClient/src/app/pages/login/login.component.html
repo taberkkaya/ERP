@@ -50,10 +50,10 @@
         <button
           type="button"
           class="tz-btn tz-btn--primary tz-btn--block"
-          [disabled]="demo.starting()"
+          [disabled]="demoBusy()"
           (click)="startDemo()"
         >
-          @if (demo.starting()) {
+          @if (demoBusy()) {
             <span class="tz-spinner"></span>
             Alan hazırlanıyor
           } @else {
@@ -115,5 +115,96 @@
     </div>
   </section>
 </div>
+
+<!-- Demoya giriş: adres doğrulaması. Kip yalnızca sunucu doğrulama istediğinde
+     ve saklanan adresle kodsuz giriş başarısız olduğunda açılıyor. -->
+@if (demoOpen()) {
+  <tz-modal title="Demoyu başlat" slim (close)="closeDemoDialog()">
+    @if (demoStep() === 'email') {
+      <p class="tz-gate__note" style="margin-top: 0">
+        Demoyu başlatmak için e-posta adresinizi doğrulayın. Adresinize tek
+        kullanımlık bir kod göndereceğiz.
+      </p>
+
+      <div class="tz-field">
+        <label for="demo-email">E-posta</label>
+        <input
+          id="demo-email"
+          type="email"
+          name="demoEmail"
+          autocomplete="email"
+          placeholder="ornek@eposta.com"
+          [(ngModel)]="demoEmail"
+          (keyup.enter)="sendDemoCode()"
+        />
+      </div>
+
+      @if (demoEmail) {
+        <button type="button" class="tz-btn tz-btn--ghost tz-btn--sm" (click)="useAnotherEmail()">
+          Bu adresi unut
+        </button>
+      }
+    } @else {
+      <p class="tz-gate__note" style="margin-top: 0">{{ demoNote() }}</p>
+
+      <div class="tz-field">
+        <label for="demo-code">Doğrulama kodu</label>
+        <input
+          id="demo-code"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          name="demoCode"
+          placeholder="000000"
+          maxlength="6"
+          [(ngModel)]="demoCode"
+          (keyup.enter)="verifyAndStart()"
+        />
+      </div>
+
+      <button type="button" class="tz-btn tz-btn--ghost tz-btn--sm" (click)="backToEmail()">
+        Adresi değiştir
+      </button>
+    }
+
+    @if (demoError()) {
+      <div class="tz-gate__error">{{ demoError() }}</div>
+    }
+
+    <ng-container modalFooter>
+      <button type="button" class="tz-btn" (click)="closeDemoDialog()">Vazgeç</button>
+
+      @if (demoStep() === 'email') {
+        <button
+          type="button"
+          class="tz-btn tz-btn--primary"
+          [disabled]="demoBusy()"
+          (click)="sendDemoCode()"
+        >
+          @if (demoBusy()) {
+            <span class="tz-spinner"></span>
+            Gönderiliyor
+          } @else {
+            Kod gönder
+          }
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="tz-btn tz-btn--primary"
+          [disabled]="demoBusy()"
+          (click)="verifyAndStart()"
+        >
+          @if (demoBusy()) {
+            <span class="tz-spinner"></span>
+            Alan hazırlanıyor
+          } @else {
+            Demoyu başlat
+          }
+        </button>
+      }
+    </ng-container>
+  </tz-modal>
+}
 
 <tz-toast-host />

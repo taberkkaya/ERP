@@ -4,13 +4,14 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { ResultModel } from '../models/auth.model';
 import {
+  DemoCodeResultModel,
   DemoConfigModel,
   DemoErrorCode,
   DemoPromptKind,
   DemoStartModel,
   DemoStatusModel,
 } from '../models/demo.model';
-import { DEMO_FLAG_KEY, api } from './api';
+import { DEMO_EMAIL_KEY, DEMO_FLAG_KEY, api } from './api';
 import { AuthService } from './auth.service';
 
 const FALLBACK_CONTACT = 'https://ataberkkaya.com';
@@ -65,14 +66,61 @@ export class DemoService {
     return this.http.get<ResultModel<DemoConfigModel>>(`${api()}/demo/config`);
   }
 
-  start(): Observable<ResultModel<DemoStartModel>> {
+  /**
+   * Doğrulanmış adres varsa onu döner. Giriş ekranı bunu görünce kod turuna hiç
+   * girmeden demoyu başlatmayı dener.
+   */
+  get rememberedEmail(): string {
+    try {
+      return localStorage.getItem(DEMO_EMAIL_KEY) ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** Ziyaretçi başka bir adresle girmek istediğinde. */
+  forgetEmail(): void {
+    try {
+      localStorage.removeItem(DEMO_EMAIL_KEY);
+    } catch {
+      /* depolama kapalıysa hatırlanacak bir şey de yok */
+    }
+  }
+
+  /**
+   * Ziyaretçinin adresine tek kullanımlık kod gönderir. Adres zaten doğrulanmışsa
+   * sunucu kod göndermez, yanıtta alreadyVerified döner.
+   */
+  requestCode(email: string): Observable<ResultModel<DemoCodeResultModel>> {
+    return this.http.post<ResultModel<DemoCodeResultModel>>(
+      `${api()}/demo/request-code`, { email });
+  }
+
+  /**
+   * Demoyu başlatır. Doğrulama açıkken adres zorunlu; kod boş bırakılırsa sunucu
+   * adresin daha önce doğrulanmış olmasını arar.
+   */
+  start(email = '', code = ''): Observable<ResultModel<DemoStartModel>> {
     this.starting.set(true);
 
-    return this.http.post<ResultModel<DemoStartModel>>(`${api()}/demo/start`, {}).pipe(
+    return this.http.post<ResultModel<DemoStartModel>>(`${api()}/demo/start`, { email, code }).pipe(
       tap({
         next: (result) => {
           this.starting.set(false);
-          if (result.data) this.adopt(result.data);
+
+          if (!result.data) return;
+
+          // Oturum gerçekten açıldıysa adres doğrulanmış demektir; bir dahakine
+          // kod adımı atlanabilsin diye saklanıyor.
+          if (email.trim()) {
+            try {
+              localStorage.setItem(DEMO_EMAIL_KEY, email.trim());
+            } catch {
+              /* depolama kapalıysa her seferinde kod istenir */
+            }
+          }
+
+          this.adopt(result.data);
         },
         error: () => this.starting.set(false),
       })

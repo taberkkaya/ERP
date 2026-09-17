@@ -64,7 +64,7 @@ export class RailComponent {
   readonly menu = computed(() =>
     MENU.map((section) => ({
       ...section,
-      items: section.items.filter((item) => !(item.hideInDemo && this.demo.isDemo)),
+      items: section.items.filter((item) => !item.adminOnly || this.auth.user().isAdmin),
     })).filter((section) => section.items.length > 0)
   );
 

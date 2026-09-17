@@ -8,4 +8,5 @@ public sealed record UpdateUserCommand(
     string FirstName,
     string LastName,
     string UserName,
-    string Email) : IRequest<Result<string>>;
+    string Email,
+    bool IsAdmin) : IRequest<Result<string>>;

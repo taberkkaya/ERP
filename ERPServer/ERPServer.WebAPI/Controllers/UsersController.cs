@@ -3,12 +3,15 @@ using ERPServer.Application.Features.Users.CreateUser;
 using ERPServer.Application.Features.Users.DeleteUserById;
 using ERPServer.Application.Features.Users.GetAllUsers;
 using ERPServer.Application.Features.Users.UpdateUser;
+using ERPServer.Application;
 using ERPServer.WebAPI.Abstractions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ERPServer.WebAPI.Controllers
 {
+    [Authorize(Policy = AuthorizationPolicies.Admin)]
     public sealed class UsersController : ApiController
     {
         public UsersController(IMediator mediator) : base(mediator)

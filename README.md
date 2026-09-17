@@ -1,8 +1,13 @@
 # Tezgah
 
-Üretim yapan bir işletmenin sipariş–reçete–stok–üretim–fatura akışını tek yerden
-yürüten bir ERP uygulaması. Bir siparişin neye ihtiyaç duyduğunu sistem kendisi
-çıkarır, üretim kaydı reçetedeki bileşenleri stoktan düşer ve mamulü depoya alır.
+Üretim yapan bir işletmenin sipariş–reçete–stok–üretim akışını tek yerden yürüten
+bir ERP uygulaması. Bir siparişin neye ihtiyaç duyduğunu sistem kendisi çıkarır,
+üretim kaydı reçetedeki bileşenleri stoktan düşer ve mamulü depoya alır.
+
+**Fatura burada kesilmez.** Alış–satış ve cari işleri ön muhasebe tarafında
+([Defter](https://github.com/taberkkaya/eAccounting)) yürür; Defter bir faturayı
+onayladığında doğan stok hareketini bu uygulamaya yazar. Böylece aynı iş iki
+yerde tutulmaz: stok, depo, reçete ve üretim burada; fatura, cari ve kasa orada.
 
 Uygulama iki türlü kullanılabilir: **normal kullanıcı girişi** ile ve **herkese açık
 demo** olarak. Demoda her ziyaretçiye kendi izole veritabanı verilir, oturum boyunca
@@ -30,7 +35,7 @@ ERPClient/src/app
 ├── core       servisler (http, auth, demo, tema, bildirim), biçimlendiriciler, menü
 ├── ui         tasarım sisteminin bileşenleri (ikon, kip, panel, tablo yüzeyleri)
 ├── layout     kabuk: sol ray, üst çubuk, demo şeridi
-└── pages      ekranlar (panel, tanımlar, siparişler, üretim, faturalar)
+└── pages      ekranlar (panel, tanımlar, siparişler, üretim)
 ```
 
 Uygulamada **tek bir `ApplicationDbContext`** var. Çok kiracılı bir yapı kurmak yerine,
@@ -45,10 +50,25 @@ veritabanına gidiyor.
 | **Sipariş** | Müşteri siparişi kalemleriyle açılır; belge numarası yıl bazlı üretilir. |
 | **İhtiyaç planı** | Stoğu yetmeyen kalemler üretilecek adet kadar reçeteleriyle patlatılır, bileşenlerin brüt ihtiyacı toplanır ve stok bir kez düşülerek eksik liste çıkarılır. Sipariş "planlandı"ya geçer. |
 | **Üretim** | Reçetedeki bileşenler üretim adediyle çarpılıp depolardan düşülür, mamul hedef depoya girer. Maliyeti tüketilen bileşenlerin ağırlıklı ortalamasıdır. |
-| **Fatura** | Alış faturası seçilen depoya stok girer, satış faturası çıkarır. Siparişe bağlı kesilirse sipariş "tamamlandı"ya döner. |
+| **Stok** | Alış faturası seçilen depoya stok girer, satış faturası çıkarır. Fatura Defter'de kesilir ve hareketi buraya yazar; siparişe bağlıysa sipariş "tamamlandı"ya döner. |
 
 Stok hiçbir yerde alan olarak tutulmuyor; her zaman `StockMovement` kayıtlarının
-giriş–çıkış farkından hesaplanıyor.
+giriş–çıkış farkından hesaplanıyor. Her hareket kaynağını da taşıyor (`Source`):
+üretim mi, Defter'de kesilen bir alış/satış faturası mı. Faturaya yabancı anahtarla
+değil kimliği ve numarasıyla bağlanılıyor — iki uygulama ayrı veritabanlarında.
+
+## 🔌 Defter ile entegrasyon
+
+`Integration:ApiKey` doluyken `/api/integration` altındaki uçlar açılır. Kimlik
+doğrulaması JWT değil paylaşılan anahtar (`X-Erp-Key` başlığı): çağıran bir sunucu,
+oturum açmış bir kişi değil. Anahtar boşsa hiçbir istek kabul edilmez.
+
+| Endpoint | Açıklama |
+| --- | --- |
+| `GET /api/integration/products` | Ürünler ve hesaplanmış stokları. Defter ürün kartını buraya eşliyor. |
+| `GET /api/integration/depots` | Depo listesi. |
+| `POST /api/integration/stock-movements` | Faturadan doğan hareketi yazar. Belge kimliğine göre **tekrarlanabilir**: aynı fatura yeniden gönderilirse eski hareketler silinip yenileri yazılır, stok ikiye katlanmaz. |
+| `DELETE /api/integration/stock-movements/{documentId}` | Fatura silindiğinde hareketlerini kaldırır. |
 
 ## 👤 Kullanıcı yönetimi
 
@@ -74,6 +94,13 @@ bunlardan biri o oturuma kiralanır ve oturuma özel, sandbox adını taşıyan 
 - Sandbox kiralanma anında sıfırlanır; her ziyaretçi aynı başlangıç verisiyle açar.
 - Yazma işlemleri (`Create`, `Update`, `DeleteById`, `RequirementsPlanningByOrderId`)
   sayılır ve `Demo:WriteLimit` aşıldığında reddedilir.
+- `Demo:RequireEmailVerification` açıkken ziyaretçi önce adresine gelen kodu girer.
+  Mail sunucusu yapılandırılmamışsa doğrulama kendiliğinden kapanır — kod
+  ulaşmayacağı için ziyaretçiyi kapıda bırakmanın anlamı yok.
+- Adresini bir kez doğrulayan ziyaretçi `Demo:VerifiedGraceHours` boyunca kod
+  istemeden geri dönebilir. Bu olmadan, oturumunu erken kapatan biri elindeki
+  tüketilmiş kodla giremiyor, yenisini de `CodeResendSeconds` dolmadan
+  isteyemiyordu.
 - Boşta kalma, mutlak süre ve **çalışma kümesi eşiği** için bir arka plan servisi
   oturumları geri alır.
 - Havuz dolduğunda en uzun süredir dokunulmayan oturum geri alınır, yani eşzamanlı
@@ -84,7 +111,8 @@ API, demoya özel retleri gövdede bir `demoCode` ile bildirir (`session_ended`,
 
 | Endpoint | Açıklama |
 | --- | --- |
-| `GET /api/demo/config` | Anonim. Demo açık mı; giriş ekranı düğmeyi buna göre gösterir. |
+| `GET /api/demo/config` | Anonim. Demo açık mı, e-posta doğrulaması isteniyor mu. |
+| `POST /api/demo/request-code` | Anonim. Adrese tek kullanımlık kod gönderir. Adres zaten doğrulanmışsa kod göndermeden `alreadyVerified` döner. |
 | `POST /api/demo/start` | Anonim. Sandbox kiralar, token döner. |
 | `GET /api/demo/status` | Kalan işlem hakkı ve süre. |
 | `POST /api/demo/reset` | Sandbox'ı sıfırlar, yeni oturum açar. |
@@ -104,7 +132,10 @@ Gizli değerler depoda tutulmaz, ortam değişkeniyle geçilir (`__` iç içe an
 | `Database__MigrateOnStartup` | Açılışta ana veritabanı migration'larını uygular. |
 | `Cors__AllowedOrigins__0` | İzin verilen origin listesi. Boşsa kimlik bilgisi olmadan tüm origin'lere izin verilir. |
 | `Seed__AdminPassword` | İlk `admin` kullanıcısının parolası. |
-| `Demo__*` | `DemoOptions` alanları: `Enabled`, `SlotCount`, `WriteLimit`, `NudgeAfterWrites`, `IdleTimeoutMinutes`, `AbsoluteTimeoutMinutes`, `MemoryThresholdMegabytes`, `ContactUrl`, `WorkspaceName`. |
+| `Demo__*` | `DemoOptions` alanları: `Enabled`, `SlotCount`, `WriteLimit`, `NudgeAfterWrites`, `IdleTimeoutMinutes`, `AbsoluteTimeoutMinutes`, `MemoryThresholdMegabytes`, `ContactUrl`, `WorkspaceName`, `RequireEmailVerification`, `VerifiedGraceHours`. |
+| `Mail__SmtpHost` | Boşsa mailler sessizce düşürülür ve demo doğrulaması kapanır. |
+| `Integration__ApiKey` | Defter ile paylaşılan anahtar. Boşsa entegrasyon uçları kapalıdır. |
+| `DemoTelemetry__*` | Demo kullanımının ataberkkaya.com paneline bildirilmesi: `Enabled`, `BaseUrl`, `ApiKey`, `AppKey`, `AppName`, `AppUrl`. |
 
 İstemcinin API adresi çalışma zamanında `assets/config.json` dosyasından okunur, yani
 adresi değiştirmek için yeniden derleme gerekmez:

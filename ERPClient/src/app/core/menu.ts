@@ -6,10 +6,11 @@ export interface MenuItem {
   exact?: boolean;
 
   /**
-   * Demo oturumunda gizlenir. Sunucu da bu ekranın yazma uçlarını demoda
-   * reddediyor; menüde bırakmak ziyaretçiyi çalışmayan bir sayfaya götürürdü.
+   * Yalnızca yöneticiye gösterilir. Sunucu da bu ekranın uçlarını "Admin"
+   * politikasıyla kapatıyor; menüde bırakmak kullanıcıyı çalışmayan bir sayfaya
+   * götürürdü. Demo jetonu yönetici işareti taşımadığı için demoda da gizli.
    */
-  hideInDemo?: boolean;
+  adminOnly?: boolean;
 }
 
 export interface MenuSection {
@@ -41,14 +42,7 @@ export const MENU: MenuSection[] = [
   {
     title: 'Yönetim',
     items: [
-      { label: 'Kullanıcılar', icon: 'user', url: '/kullanicilar', hideInDemo: true },
-    ],
-  },
-  {
-    title: 'Faturalar',
-    items: [
-      { label: 'Alış Faturaları', icon: 'invoice-in', url: '/faturalar/alis' },
-      { label: 'Satış Faturaları', icon: 'invoice-out', url: '/faturalar/satis' },
+      { label: 'Kullanıcılar', icon: 'user', url: '/kullanicilar', adminOnly: true },
     ],
   },
 ];

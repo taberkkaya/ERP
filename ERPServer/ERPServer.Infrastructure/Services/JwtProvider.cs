@@ -23,7 +23,8 @@ namespace ERPServer.Infrastructure.Services
                 new Claim("Id", user.Id.ToString()),
                 new Claim("Name", user.FullName),
                 new Claim("Email", user.Email ?? ""),
-                new Claim("UserName", user.UserName ?? "")
+                new Claim("UserName", user.UserName ?? ""),
+                new Claim("IsAdmin", user.IsAdmin.ToString())
             ];
 
             DateTime expires = DateTime.UtcNow.AddDays(7);
@@ -49,6 +50,10 @@ namespace ERPServer.Infrastructure.Services
                 new Claim("Name", displayName),
                 new Claim("Email", ""),
                 new Claim("UserName", "demo"),
+
+                // Demo ziyaretçisi yönetici değil: kullanıcı yönetimi ekranı
+                // menüde de görünmüyor, uçları da politikayla kapalı.
+                new Claim("IsAdmin", bool.FalseString),
                 new Claim(DemoClaimTypes.SessionId, sessionId.ToString()),
 
                 // İsteğin hangi sandbox'a bağlanacağı jetonda taşınıyor; imzalı

@@ -28,6 +28,17 @@ internal sealed class DeleteUserByIdCommandHandler(
         if (await userManager.Users.CountAsync(cancellationToken) <= 1)
             return Result<string>.Failure("Sistemdeki son kullanıcı silinemez!");
 
+        // Son yönetici silinirse kullanıcı yönetimine kimse erişemez.
+        if (user.IsAdmin)
+        {
+            bool anotherAdminExists = await userManager.Users
+                .AnyAsync(p => p.IsAdmin && p.Id != user.Id, cancellationToken);
+
+            if (!anotherAdminExists)
+                return Result<string>.Failure(
+                    "Sistemdeki son yönetici silinemez. Önce başka bir yönetici tanımlayın.");
+        }
+
         IdentityResult result = await userManager.DeleteAsync(user);
 
         if (!result.Succeeded)

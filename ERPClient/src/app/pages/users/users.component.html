@@ -34,6 +34,7 @@
             <tr>
               <th>Ad Soyad</th>
               <th>Kullanıcı adı</th>
+              <th>Yetki</th>
               <th>E-posta</th>
               <th class="actions"><span class="tz-sr">İşlemler</span></th>
             </tr>
@@ -50,6 +51,13 @@
                   </span>
                 </td>
                 <td class="num">{{ user.userName }}</td>
+                <td>
+                  @if (user.isAdmin) {
+                    <span class="tz-badge tz-badge--accent">Yönetici</span>
+                  } @else {
+                    <span class="tz-badge tz-badge--neutral">Kullanıcı</span>
+                  }
+                </td>
                 <td>{{ user.email || '—' }}</td>
                 <td class="actions">
                   <button
@@ -122,6 +130,16 @@
           required
           email
         />
+      </div>
+
+      <div class="tz-field">
+        <label class="tz-check">
+          <input type="checkbox" name="isAdmin" [(ngModel)]="draft.isAdmin" />
+          Yönetici
+        </label>
+        <div class="tz-hint">
+          Yalnızca yöneticiler kullanıcı ekleyip silebilir. Diğer ekranlar herkese açıktır.
+        </div>
       </div>
 
       @if (isNew()) {

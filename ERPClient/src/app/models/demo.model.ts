@@ -19,6 +19,18 @@ export interface DemoStartModel {
 
 export interface DemoConfigModel {
   enabled: boolean;
+
+  /** Açıkken ziyaretçiden önce e-posta adresi ve kod isteniyor. */
+  emailVerificationRequired: boolean;
+}
+
+/**
+ * Kod isteğinin sonucu. alreadyVerified true ise kod gönderilmedi ve gerekmiyor:
+ * adres yakın zamanda doğrulanmış, kod adımı atlanır.
+ */
+export interface DemoCodeResultModel {
+  message: string;
+  alreadyVerified: boolean;
 }
 
 /**

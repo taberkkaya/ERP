@@ -24,7 +24,8 @@ internal sealed class GetAllUsersQueryHandler(
                 LastName = p.LastName,
                 FullName = p.FirstName + " " + p.LastName,
                 UserName = p.UserName ?? string.Empty,
-                Email = p.Email ?? string.Empty
+                Email = p.Email ?? string.Empty,
+                IsAdmin = p.IsAdmin
             })
             .ToListAsync(cancellationToken);
 

@@ -15,6 +15,7 @@ interface UserDraft {
   userName: string;
   email: string;
   password: string;
+  isAdmin: boolean;
 }
 
 @Component({
@@ -79,7 +80,16 @@ export class UsersComponent implements OnInit {
   openCreate(): void {
     this.submitted.set(false);
     this.isNew.set(true);
-    this.editing.set({ id: '', firstName: '', lastName: '', userName: '', email: '', password: '' });
+    this.editing.set({
+      id: '',
+      firstName: '',
+      lastName: '',
+      userName: '',
+      email: '',
+      password: '',
+      // Yeni hesap varsayılan olarak yönetici değil; yetki bilinçli verilmeli.
+      isAdmin: false,
+    });
   }
 
   openEdit(user: AppUserModel): void {
@@ -92,6 +102,7 @@ export class UsersComponent implements OnInit {
       userName: user.userName,
       email: user.email,
       password: '',
+      isAdmin: user.isAdmin,
     });
   }
 
@@ -115,6 +126,7 @@ export class UsersComponent implements OnInit {
           userName: draft.userName,
           email: draft.email,
           password: draft.password,
+          isAdmin: draft.isAdmin,
         }
       : {
           id: draft.id,
@@ -122,6 +134,7 @@ export class UsersComponent implements OnInit {
           lastName: draft.lastName,
           userName: draft.userName,
           email: draft.email,
+          isAdmin: draft.isAdmin,
         };
 
     this.http.post<string>(isNew ? 'Users/Create' : 'Users/Update', body, (message) => {

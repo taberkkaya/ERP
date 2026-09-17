@@ -7,7 +7,7 @@ import { ShellComponent } from './layout/shell.component';
  * Yollar Türkçe: uygulamanın dili Türkçe ve adres çubuğu da arayüzün bir parçası.
  *
  * Ekranlar tembel yükleniyor; giriş ekranına gelen bir ziyaretçi, hiç açmayacağı
- * fatura veya üretim ekranını indirmek zorunda kalmıyor.
+ * reçete veya üretim ekranını indirmek zorunda kalmıyor.
  */
 export const routes: Routes = [
   {
@@ -69,14 +69,9 @@ export const routes: Routes = [
           import('./pages/planning/planning.component').then((m) => m.PlanningComponent),
       },
       {
-        path: 'faturalar/:type',
-        data: { title: 'Faturalar' },
-        loadComponent: () =>
-          import('./pages/invoices/invoices.component').then((m) => m.InvoicesComponent),
-      },
-      {
         path: 'kullanicilar',
         data: { title: 'Kullanıcılar' },
+        canActivate: [() => inject(AuthService).isAdmin()],
         loadComponent: () => import('./pages/users/users.component').then((m) => m.UsersComponent),
       },
       {

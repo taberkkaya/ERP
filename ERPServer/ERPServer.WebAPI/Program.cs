@@ -19,7 +19,7 @@ if (!builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(jwtSecret)
         "Jwt__SecretKey tanımlı değil. Production'da bu değer ortam değişkeniyle verilmelidir.");
 }
 
-builder.Services.AddApplication();
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // İstemci ve API aynı origin'den servis edildiğinde (Caddy /api'yi yönlendiriyor)
@@ -53,6 +53,17 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = 5,
                 Window = TimeSpan.FromMinutes(1)
+            }));
+
+    // Kod gönderimi mail kutusuna dokunuyor: tek bir adresin başkasını rahatsız
+    // etmek için kullanılmasını engelliyor.
+    options.AddPolicy("demo-code", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(5)
             }));
 });
 
@@ -114,6 +125,10 @@ app.UseMiddleware<DemoSessionMiddleware>();
 
 app.MapControllers();
 app.RegisterDemoRoutes();
+
+// Defter'in konustugu uclar. Anahtar tanimlanmamissa istekleri reddediyor;
+// tek basina calisan bir kurulumda entegrasyon kapali kalir.
+app.RegisterIntegrationRoutes();
 
 // Coolify dağıtımda yeni konteynere ne zaman geçeceğini buradan anlıyor.
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();

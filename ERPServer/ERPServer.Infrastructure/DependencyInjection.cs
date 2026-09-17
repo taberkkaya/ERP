@@ -1,7 +1,9 @@
 using System.Reflection;
+using ERPServer.Application;
 using ERPServer.Application.Services;
 using ERPServer.Domain.Demo;
 using ERPServer.Domain.Entities;
+using ERPServer.Domain.Integration;
 using ERPServer.Infrastructure.Context;
 using ERPServer.Infrastructure.Demo;
 using ERPServer.Infrastructure.Options;
@@ -23,6 +25,10 @@ namespace ERPServer.Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<DemoOptions>(configuration.GetSection(DemoOptions.SectionName));
+            services.Configure<DemoTelemetryOptions>(
+                configuration.GetSection(DemoTelemetryOptions.SectionName));
+            services.Configure<IntegrationOptions>(
+                configuration.GetSection(IntegrationOptions.SectionName));
 
             // Bağlantı, isteğin jetonuna bakılarak çözülüyor: demo ziyaretçisi kendi
             // sandbox'ına, diğer herkes ana veritabanına gidiyor.
@@ -40,9 +46,20 @@ namespace ERPServer.Infrastructure
 
             // Slot havuzu süreç geneli bir durum, bu yüzden singleton; arka plan
             // servisi de aynı örneği kullanıyor.
+            // Panele bildirim: süreç geneli tek örnek, havuzla aynı ömürde.
+            services.AddSingleton<IDemoTelemetryPublisher, DemoTelemetryPublisher>();
+
             services.AddSingleton<DemoSessionService>();
             services.AddSingleton<IDemoSessionService>(srv => srv.GetRequiredService<DemoSessionService>());
             services.AddHostedService<DemoHostedService>();
+
+            // Ziyaretci dogrulamasi ana veritabanina yaziyor, bu yuzden scoped.
+            // Demo ad alani toplu taramanin disinda oldugu icin elle kaydediliyor.
+            services.AddScoped<IDemoVerificationService, DemoVerificationService>();
+
+            // Konum aramasi icin: adres basina onbellege alinan tek bir dis cagri.
+            services.AddHttpClient();
+            services.AddMemoryCache();
 
             services
                 .AddIdentity<AppUser, IdentityRole<Guid>>(cfr =>
@@ -79,7 +96,11 @@ namespace ERPServer.Infrastructure
                 })
                 .AddJwtBearer();
 
-            services.AddAuthorizationBuilder();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(AuthorizationPolicies.Admin, policy =>
+                    policy.RequireClaim("IsAdmin", bool.TrueString));
+            });
 
             services.Scan(action =>
             {

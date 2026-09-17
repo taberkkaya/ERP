@@ -78,28 +78,25 @@ export class OrderModel {
   status?: EnumModel;
 }
 
-export class InvoiceDetailModel {
-  id = '';
-  invoiceId = '';
-  productId = '';
-  depotId = '';
-  depot?: DepotModel;
-  product?: ProductModel;
-  quantity = 0;
-  price = 0;
+/**
+ * Panodaki stok özeti. Sunucudaki StockMovements/GetSummary karşılığı.
+ *
+ * Faturalar Defter'de kesiliyor; burada yalnızca onların stokta bıraktığı iz
+ * var. Kaynak kırılımı bu yüzden anlamlı: aynı tabloda üretimin doğurduğu
+ * hareketle faturanın doğurduğu hareket yan yana duruyor.
+ */
+export interface StockSummaryLine {
+  source: string;
+  entryValue: number;
+  exitValue: number;
+  movementCount: number;
 }
 
-export class InvoiceModel {
-  id = '';
-  invoiceNumber = '';
-  date = '';
-  customerId = '';
-  customer?: CustomerModel;
-  details?: InvoiceDetailModel[];
-  type?: EnumModel;
-  typeValue = 1;
-  /** Siparişten faturalandırıldıysa dolu; sunucu siparişi tamamlandıya çekiyor. */
-  orderId?: string | null = null;
+export interface StockSummaryModel {
+  entryValue: number;
+  exitValue: number;
+  movementCount: number;
+  bySource: StockSummaryLine[];
 }
 
 export class ProductionModel {
@@ -117,7 +114,6 @@ export class ProductionModel {
  * ise her zaman bir dizi var, bu yuzden gerekli olarak daraltiliyor.
  */
 export type OrderDraft = OrderModel & { details: OrderDetailModel[] };
-export type InvoiceDraft = InvoiceModel & { details: InvoiceDetailModel[] };
 
 export interface RequirementsPlanningModel {
   date: string;
@@ -131,15 +127,6 @@ export const OrderStatus = {
   Planned: 2,
   Completed: 3,
 } as const;
-
-/** Fatura türleri — sunucudaki InvoiceTypeEnum ile aynı değerler. */
-export const InvoiceType = {
-  Purchase: 1,
-  Sales: 2,
-} as const;
-
-/** Rotadaki `:type` parçası ile fatura türü arasındaki eşleşme. */
-export type InvoiceRouteType = 'purchase' | 'selling';
 
 export const productTypes: EnumModel[] = [
   { value: 1, name: 'Mamul' },

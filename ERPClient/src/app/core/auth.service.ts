@@ -9,6 +9,7 @@ interface ErpJwtPayload extends JwtPayload {
   Name?: string;
   Email?: string;
   UserName?: string;
+  IsAdmin?: string;
   DemoSessionId?: string;
 }
 
@@ -92,12 +93,30 @@ export class AuthService {
     if (payload) this.apply(payload);
   }
 
+  /**
+   * Yönetim ekranlarının yol koruması. Giriş yapmış olmak yetmiyor; yönetici
+   * olmayan biri adresi elle yazarsa panele geri gönderiliyor. Asıl denetim
+   * sunucuda: uçlar "Admin" politikasıyla kapalı.
+   */
+  isAdmin(): boolean {
+    if (!this.isAuthenticated()) return false;
+
+    if (!this.user().isAdmin) {
+      this.router.navigateByUrl('/');
+      return false;
+    }
+
+    return true;
+  }
+
   private apply(payload: ErpJwtPayload): void {
     this.user.set({
       id: payload.Id ?? '',
       name: payload.Name ?? '',
       email: payload.Email ?? '',
       userName: payload.UserName ?? '',
+      // Claim metin olarak geliyor: "True" / "False".
+      isAdmin: payload.IsAdmin === 'True',
     });
   }
 

@@ -9,10 +9,13 @@ namespace ERPServer.Infrastructure.Demo;
 /// Bir sandbox veritabanını demo başlangıç durumuna getirir.
 ///
 /// Veri, uygulamanın tüm akışını tek bakışta gösterecek şekilde kuruldu: alış
-/// faturasıyla dolmuş hammadde stoğu, çalışmış bir üretim, kesilmiş bir satış
-/// faturası ve karşılanması için eksik bileşen gerektiren açık bir sipariş.
-/// Böylece ziyaretçi ihtiyaç planlamasını çalıştırdığında boş bir liste değil,
-/// gerçek bir sonuç görüyor.
+/// faturasıyla dolmuş hammadde stoğu, çalışmış bir üretim, satılmış mamul ve
+/// karşılanması için eksik bileşen gerektiren açık bir sipariş. Böylece ziyaretçi
+/// ihtiyaç planlamasını çalıştırdığında boş bir liste değil, gerçek bir sonuç
+/// görüyor.
+///
+/// Faturalar Defter'de kesiliyor; burada yalnızca onların doğurduğu stok
+/// hareketleri var, belge numaralarıyla birlikte.
 /// </summary>
 internal static class DemoDataSeeder
 {
@@ -29,8 +32,6 @@ internal static class DemoDataSeeder
     public static async Task WipeAsync(ApplicationDbContext context, CancellationToken cancellationToken = default)
     {
         await context.StockMovements.ExecuteDeleteAsync(cancellationToken);
-        await context.InvoiceDetails.ExecuteDeleteAsync(cancellationToken);
-        await context.Invoices.ExecuteDeleteAsync(cancellationToken);
         await context.OrderDetails.ExecuteDeleteAsync(cancellationToken);
         await context.Orders.ExecuteDeleteAsync(cancellationToken);
         await context.Productions.ExecuteDeleteAsync(cancellationToken);
@@ -156,37 +157,23 @@ internal static class DemoDataSeeder
             (bant, 300m, 12m)
         ];
 
-        Invoice purchase = new()
-        {
-            InvoiceNumber = "ALS2026000001",
-            Date = today.AddDays(-20),
-            CustomerId = marmara.Id,
-            Type = InvoiceTypeEnum.Purchase,
-            Details = []
-        };
+        // Faturanın kendisi Defter'de; buradaki kimlik onun karşılığı. Sabit
+        // değil üretilmiş bir Guid: her sandbox kendi hareketlerini taşıyor.
+        Guid purchaseDocumentId = Guid.NewGuid();
 
         foreach ((Product product, decimal quantity, decimal price) in purchaseLines)
         {
-            purchase.Details.Add(new InvoiceDetail
-            {
-                InvoiceId = purchase.Id,
-                ProductId = product.Id,
-                DepotId = hammadde.Id,
-                Quantity = quantity,
-                Price = price
-            });
-
             context.StockMovements.Add(new StockMovement
             {
-                InvoiceId = purchase.Id,
+                Source = StockMovementSourceEnum.PurchaseInvoice,
+                ExternalDocumentId = purchaseDocumentId,
+                ExternalDocumentNumber = "ALS2026000001",
                 ProductId = product.Id,
                 DepotId = hammadde.Id,
                 NumberOfEntries = quantity,
                 Price = price
             });
         }
-
-        context.Invoices.Add(purchase);
 
         // --- üretim: 12 adet sandalye --------------------------------------
         // Reçetedeki bileşenler hammadde deposundan düşülüyor, mamul üretim
@@ -219,6 +206,7 @@ internal static class DemoDataSeeder
 
             context.StockMovements.Add(new StockMovement
             {
+                Source = StockMovementSourceEnum.Production,
                 ProductionId = production.Id,
                 ProductId = product.Id,
                 DepotId = hammadde.Id,
@@ -229,6 +217,7 @@ internal static class DemoDataSeeder
 
         context.StockMovements.Add(new StockMovement
         {
+            Source = StockMovementSourceEnum.Production,
             ProductionId = production.Id,
             ProductId = sandalye.Id,
             DepotId = uretim.Id,
@@ -238,7 +227,7 @@ internal static class DemoDataSeeder
 
         context.Productions.Add(production);
 
-        // --- tamamlanmış sipariş ve satış faturası -------------------------
+        // --- tamamlanmış sipariş ve onu kapatan satış ----------------------
         Order completedOrder = new()
         {
             CustomerId = anadolu.Id,
@@ -253,21 +242,13 @@ internal static class DemoDataSeeder
             ]
         };
 
-        Invoice sale = new()
-        {
-            InvoiceNumber = "STS2026000001",
-            Date = today.AddDays(-4),
-            CustomerId = anadolu.Id,
-            Type = InvoiceTypeEnum.Sales,
-            Details =
-            [
-                new OrderDetailToInvoiceLine(sandalye.Id, uretim.Id, 5m, 3450m).ToDetail()
-            ]
-        };
-
+        // Siparişi kapatan satış faturası da Defter'de kesilmişti; buradaki iz
+        // onun stoktan düşürdüğü beş sandalye.
         context.StockMovements.Add(new StockMovement
         {
-            InvoiceId = sale.Id,
+            Source = StockMovementSourceEnum.SalesInvoice,
+            ExternalDocumentId = Guid.NewGuid(),
+            ExternalDocumentNumber = "STS2026000001",
             ProductId = sandalye.Id,
             DepotId = uretim.Id,
             NumberOfOutputs = 5m,
@@ -275,7 +256,6 @@ internal static class DemoDataSeeder
         });
 
         context.Orders.Add(completedOrder);
-        context.Invoices.Add(sale);
 
         // --- açık siparişler -----------------------------------------------
         // Bu siparişin ihtiyaç planı boş çıkmıyor: masa ve kitaplık için gereken
@@ -348,21 +328,5 @@ internal static class DemoDataSeeder
         }
 
         return recipe;
-    }
-
-    /// <summary>Fatura satırını tek satırda kurmak için küçük bir yardımcı.</summary>
-    private readonly record struct OrderDetailToInvoiceLine(
-        Guid ProductId,
-        Guid DepotId,
-        decimal Quantity,
-        decimal Price)
-    {
-        public InvoiceDetail ToDetail() => new()
-        {
-            ProductId = ProductId,
-            DepotId = DepotId,
-            Quantity = Quantity,
-            Price = Price
-        };
     }
 }

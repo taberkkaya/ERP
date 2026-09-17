@@ -61,4 +61,40 @@ public sealed class DemoOptions
     public string UserName { get; set; } = "demo";
 
     public string Email { get; set; } = "demo@tezgah.local";
+
+    /// <summary>
+    /// Demoya girmeden önce ziyaretçinin e-posta adresine kod gönderilip
+    /// doğrulanmasını ister. Mail sunucusu yapılandırılmamışsa kod gönderilemeyeceği
+    /// için doğrulama kendiliğinden devre dışı kalır; aksi hâlde demo hiç açılmazdı.
+    /// </summary>
+    public bool RequireEmailVerification { get; set; } = true;
+
+    public int CodeLength { get; set; } = 6;
+
+    public int CodeLifetimeMinutes { get; set; } = 10;
+
+    /// <summary>Aynı adrese iki kod arasında beklenmesi gereken süre.</summary>
+    public int CodeResendSeconds { get; set; } = 60;
+
+    /// <summary>Bir kod için tanınan yanlış deneme hakkı.</summary>
+    public int MaxCodeAttempts { get; set; } = 5;
+
+    /// <summary>
+    /// Adresini bir kez doğrulayan ziyaretçi bu süre boyunca yeniden kod istemeden
+    /// demo açabilir.
+    ///
+    /// Bu olmadan, oturumunu erken kapatıp geri dönen biri zaten kanıtladığı şeyi
+    /// tekrar kanıtlamak zorunda kalır: elindeki kod tüketilmiş olur, yenisini
+    /// istemek de <see cref="CodeResendSeconds"/> kadar beklemek demektir.
+    /// </summary>
+    public int VerifiedGraceHours { get; set; } = 24;
+
+    /// <summary>
+    /// Ziyaretçinin IP adresini ülke ve şehre çeviren servis. {ip} yer tutucusu
+    /// adresle değiştirilir. Boş bırakılırsa konum hiç sorulmaz; adresin üçüncü
+    /// bir servise gitmesini istemeyen kurulum bunu boşaltır.
+    /// </summary>
+    public string GeoLookupUrl { get; set; } = "https://ipwho.is/{ip}";
+
+    public int GeoLookupTimeoutSeconds { get; set; } = 4;
 }

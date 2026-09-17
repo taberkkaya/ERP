@@ -30,7 +30,19 @@ public static class ExtensionsMiddleware
 
         const string userName = "admin";
 
-        if (await userManager.FindByNameAsync(userName) is not null) return;
+        if (await userManager.FindByNameAsync(userName) is AppUser existing)
+        {
+            // Yetki alanı sonradan eklendi: mevcut kurulumlarda hiç yönetici
+            // kalmamış olabilir, o zaman ilk kullanıcı yönetici yapılıyor.
+            if (!userManager.Users.Any(p => p.IsAdmin))
+            {
+                existing.IsAdmin = true;
+                await userManager.UpdateAsync(existing);
+                app.Logger.LogInformation("Yönetici bulunamadı; {UserName} yönetici yapıldı.", userName);
+            }
+
+            return;
+        }
 
         // Parola yapilandirmadan geliyor; depoda sabit bir parola tutulmuyor.
         string password = app.Configuration["Seed:AdminPassword"] ?? "1";
@@ -41,7 +53,8 @@ public static class ExtensionsMiddleware
             Email = "admin@tezgah.local",
             FirstName = "Sistem",
             LastName = "Yoneticisi",
-            EmailConfirmed = true
+            EmailConfirmed = true,
+            IsAdmin = true
         };
 
         IdentityResult result = await userManager.CreateAsync(user, password);

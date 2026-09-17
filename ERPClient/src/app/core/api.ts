@@ -37,3 +37,9 @@ export async function loadRuntimeConfig(): Promise<void> {
 export const TOKEN_KEY = 'tz-token';
 export const DEMO_FLAG_KEY = 'tz-demo';
 export const THEME_KEY = 'tz-theme';
+
+/**
+ * Doğrulanmış demo adresi. Oturum bitse de silinmiyor: ziyaretçinin bu adrese
+ * sahip olduğunu kanıtlaması bir kez yeterli, her dönüşünde tekrar kod beklemesin.
+ */
+export const DEMO_EMAIL_KEY = 'tz-demo-email';

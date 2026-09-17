@@ -17,6 +17,7 @@ export class AppUserModel {
   fullName = '';
   userName = '';
   email = '';
+  isAdmin = false;
 }
 
 export class UserModel {
@@ -24,6 +25,7 @@ export class UserModel {
   name = '';
   email = '';
   userName = '';
+  isAdmin = false;
 }
 
 /** Sunucunun ResultKit/TS.Result sarmalayıcısı. */

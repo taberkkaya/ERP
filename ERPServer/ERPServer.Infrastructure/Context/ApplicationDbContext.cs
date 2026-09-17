@@ -1,4 +1,5 @@
-﻿using ERPServer.Domain.Entities;
+﻿using ERPServer.Domain.Demo;
+using ERPServer.Domain.Entities;
 using GenericRepository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -20,9 +21,15 @@ namespace ERPServer.Infrastructure.Context
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<StockMovement> StockMovements { get; set; }
-        public DbSet<Invoice> Invoices { get; set; }
-        public DbSet<InvoiceDetail> InvoiceDetails { get; set; }
         public DbSet<Production> Productions { get; set; }
+
+        /// <summary>
+        /// Demoyu deneyen ziyaretciler. Sandbox veritabanlari her kiralamada
+        /// sifirlandigi icin bu tablo yalnizca ana veritabaninda anlamli; kod isteme
+        /// ve oturum acma istekleri jeton tasimadan geldigi icin
+        /// ConnectionStringResolver onlari zaten oraya yonlendiriyor.
+        /// </summary>
+        public DbSet<DemoVisitor> DemoVisitors { get; set; }
         
 
         protected override void OnModelCreating(ModelBuilder builder)

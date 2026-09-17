@@ -14,4 +14,5 @@ public sealed record GetAllUsersQueryResponse
     public string FullName { get; init; } = string.Empty;
     public string UserName { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
+    public bool IsAdmin { get; init; }
 }

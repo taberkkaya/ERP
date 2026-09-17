@@ -39,6 +39,19 @@ services:
       Demo__AbsoluteTimeoutMinutes: ${DEMO_SESSION_MINUTES:-15}
       Demo__MemoryThresholdMegabytes: ${DEMO_MEMORY_MB:-1024}
       Demo__ContactUrl: ${CONTACT_URL:-}
+      # Demo kullanimi ataberkkaya.com/admin panelinde gorunsun. ApiKey iki
+      # tarafta da ayni olmali; bos birakilirsa bildirim gonderilmez ve demo
+      # eskisi gibi calisir.
+      DemoTelemetry__Enabled: ${DEMO_TELEMETRY_ENABLED:-false}
+      DemoTelemetry__BaseUrl: ${DEMO_TELEMETRY_URL:-https://ataberkkaya.com}
+      DemoTelemetry__ApiKey: ${DEMO_TELEMETRY_KEY:-}
+      DemoTelemetry__AppKey: tezgah
+      DemoTelemetry__AppName: Tezgah
+      DemoTelemetry__AppUrl: ${SERVICE_FQDN_CLIENT_80:-}
+
+      # Defter'in stok yazarken kullandigi anahtar; iki tarafta ayni olmali.
+      # Bos birakilirsa entegrasyon uclari hicbir istegi kabul etmez.
+      Integration__ApiKey: ${ERP_API_KEY:-}
 
       Cors__AllowedOrigins__0: ""
     depends_on:

@@ -30,6 +30,19 @@ internal sealed class UpdateUserCommandHandler(
         if (isEmailTaken)
             return Result<string>.Failure("Bu e-posta adresi zaten kayıtlı!");
 
+        // Son yöneticinin yetkisini almak, hesabı silmek kadar kesin biçimde
+        // kullanıcı yönetimini kilitler.
+        if (user.IsAdmin && !request.IsAdmin)
+        {
+            bool anotherAdminExists = await userManager.Users
+                .AnyAsync(p => p.IsAdmin && p.Id != user.Id, cancellationToken);
+
+            if (!anotherAdminExists)
+                return Result<string>.Failure(
+                    "Sistemdeki son yöneticinin yetkisi kaldırılamaz. Önce başka bir yönetici tanımlayın.");
+        }
+
+        user.IsAdmin = request.IsAdmin;
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
         user.UserName = request.UserName;
